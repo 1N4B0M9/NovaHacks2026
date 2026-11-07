@@ -2,6 +2,8 @@
 import { localize } from "../lib/locale";
 import { useEffect, useRef, useState } from "react";
 import { copy, unitLabel } from "./components/copy";
+import { OrderTicket } from "./components/order-ticket";
+import { ParsedList } from "./components/parsed-list";
 import { PhotoIntake } from "./components/photo-intake";
 import {
   money,
@@ -142,6 +144,8 @@ export default function Home() {
   const readyToApprove =
     !!draft?.canApprove && !held && included.length > 0 && !finalized;
   const destination = /^\d{5}(?:-\d{4})?$/.test(zip.trim());
+  const l = (en: string, es: string, zh: string) =>
+    localize(language, en, es, zh);
   const step = order ? 3 : draft ? 2 : 1;
   return (
     <div className="app-shell" lang={language}>
@@ -154,10 +158,19 @@ export default function Home() {
             mise<span className="brand-dot">.</span>
           </span>
         </a>
-        <span className="topbar-note">KITCHEN → SUPPLIER</span>
-        <span className="demo-tag">
-          {localize(language, "DEMO WORKSPACE", "DEMOSTRACIÓN", "演示")}
-        </span>
+        <label className="locale-switch">
+          <span className="sr-only">{t.language}</span>
+          <select
+            id="review-language"
+            value={language}
+            disabled={!!pending || scanning || !!draft}
+            onChange={(e) => setLanguage(e.target.value as Language)}
+          >
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="zh">简体中文</option>
+          </select>
+        </label>
       </header>
       <main>
         <nav aria-label={t.workflow} className="steps">
@@ -200,32 +213,10 @@ export default function Home() {
         {!draft ? (
           <section className="intake-layout">
             <div className="intro">
-              <p className="eyebrow">
-                <span /> {t.eyebrow}
-              </p>
-              <h1 tabIndex={-1} ref={heading}>
-                {t.title}
+              <h1 ref={heading} tabIndex={-1}>
+                {l("Scan your order.", "Escanea tu pedido.", "扫描订货单。")}
               </h1>
-              <p className="lead-text">{t.intro}</p>
-              <div className="illustration" aria-hidden="true">
-                <div className="paper paper-back" />
-                <div className="paper paper-front">
-                  <span className="paper-title">THE CLOSING LIST</span>
-                  <span className="paper-line">
-                    2 docenas de huevos <span>↗</span>
-                  </span>
-                  <span className="paper-line">
-                    leche de avena <span>✓</span>
-                  </span>
-                  <span className="paper-line light">
-                    a fresh start tomorrow.
-                  </span>
-                  <span className="paper-stamp">CHECKED WITH CARE</span>
-                </div>
-                <div className="illustration-label">
-                  a good day starts with a clear list.
-                </div>
-              </div>
+              <OrderTicket language={language} />
             </div>
             <form
               className="intake-card"
@@ -244,40 +235,28 @@ export default function Home() {
                   );
               }}
             >
-              <div className="card-kicker">01 / {t.intake.toUpperCase()}</div>
-              <h2>{t.note}</h2>
-              <p className="muted">{t.noteHint}</p>
-              <label className="field-label" htmlFor="review-language">
-                {t.language}
-              </label>
-              <select
-                id="review-language"
-                value={language}
-                onChange={(event) =>
-                  setLanguage(event.target.value as Language)
-                }
-                disabled={!!pending || scanning}
-              >
-                <option value="en">English</option>
-                <option value="es">Español</option>
-                <option value="zh">简体中文</option>
-              </select>
-              <label className="field-label" htmlFor="zip-code">
-                {t.zip}
-              </label>
-              <input
-                id="zip-code"
-                inputMode="numeric"
-                autoComplete="postal-code"
-                value={zip}
-                placeholder="10011"
-                maxLength={10}
-                required
-                disabled={!!pending || scanning}
-                onChange={(event) => setZip(event.target.value)}
-              />
-              <p className="muted small">{t.zipHint}</p>
+              <h2>{l("Your note", "Tu nota", "手写清单")}</h2>
+
               <PhotoIntake
+                locationField={
+                  <div>
+                    {" "}
+                    <label className="field-label" htmlFor="zip-code">
+                      {t.zip}
+                    </label>
+                    <input
+                      id="zip-code"
+                      inputMode="numeric"
+                      autoComplete="postal-code"
+                      value={zip}
+                      placeholder="10011"
+                      maxLength={10}
+                      required
+                      disabled={!!pending || scanning}
+                      onChange={(event) => setZip(event.target.value)}
+                    />
+                  </div>
+                }
                 language={language}
                 t={t}
                 photo={photo}
@@ -297,17 +276,10 @@ export default function Home() {
               />
               {intakeMode && (
                 <div className="extracted-note">
-                  <label className="field-label" htmlFor="kitchen-note">
-                    {intakeMode === "extracted" ? t.extracted : t.manualHeading}
-                  </label>
-                  <p className="muted small">{t.extractedHint}</p>
-                  <textarea
-                    id="kitchen-note"
-                    value={text}
-                    onChange={(event) => setText(event.target.value)}
-                    rows={5}
-                    required
-                    maxLength={5000}
+                  <ParsedList
+                    initialText={text}
+                    language={language}
+                    onChange={setText}
                     disabled={!!pending || scanning}
                   />
                   <button
@@ -321,7 +293,6 @@ export default function Home() {
                   </button>
                 </div>
               )}
-              <p className="simulation-note">{t.simulation}</p>
             </form>
           </section>
         ) : order ? (
@@ -372,7 +343,6 @@ export default function Home() {
                 <span>{t.total}</span>
                 <strong>{money(order.totalMinor, language)}</strong>
               </div>
-              <p className="simulation-note">{t.simulation}</p>
             </div>
             <button className="button primary" onClick={reset}>
               {t.editList}
@@ -383,11 +353,9 @@ export default function Home() {
           <section className="review-section">
             <div className="review-heading">
               <div>
-                <p className="eyebrow">02 / {t.check.toUpperCase()}</p>
                 <h1 tabIndex={-1} ref={heading}>
                   {t.reviewTitle}
                 </h1>
-                <p className="lead-text">{t.reviewIntro}</p>
               </div>
               <button
                 className="button ghost"
@@ -413,7 +381,13 @@ export default function Home() {
               </div>
             )}
             <div className="review-layout">
-              <div className="line-list" aria-busy={!!pending}>
+              <div
+                className="line-list cart-scroll"
+                role="region"
+                tabIndex={0}
+                aria-label={t.check}
+                aria-busy={!!pending}
+              >
                 {draft.lines.map((line) => {
                   const cost =
                     line.status === "ready" &&
@@ -422,8 +396,11 @@ export default function Home() {
                       ? money(line.priceMinor * line.cases, language)
                       : null;
                   return (
-                    <article className={`line-card ${line.status}`} key={line.id}>
-                      <p className="field-label">{line.source}</p>
+                    <article
+                      className={`cart-item ${line.status}`}
+                      key={line.id}
+                    >
+                      <p className="cart-source">{line.source}</p>
                       {line.status === "ready" ? (
                         <>
                           <div className="line-heading">
@@ -449,7 +426,9 @@ export default function Home() {
                             !(line.packSize === 1 && line.packUnit === "each")
                               ? `${line.cases} × ${line.packSize} ${unitLabel(line.packUnit, language)} · `
                               : ""}
-                            {line.priceMinor == null ? `${t.priceAtStore} · ` : ""}
+                            {line.priceMinor == null
+                              ? `${t.priceAtStore} · `
+                              : ""}
                             {draft.deliveryZip
                               ? `${t.shipsTo} ${draft.deliveryZip}`
                               : ""}
@@ -463,38 +442,11 @@ export default function Home() {
                 })}
               </div>
               <aside className="summary-card" aria-label={t.summary}>
-                <p className="card-kicker">03 / {t.preview.toUpperCase()}</p>
-                <h2>{t.summary}</h2>
-                <p className="muted small">{t.summaryHint}</p>
-                <ul className="summary-lines">
-                  {included.length === 0 ? (
-                    <li className="empty-summary">{t.empty}</li>
-                  ) : (
-                    included.map((line) => (
-                      <li key={line.id}>
-                        <div>
-                          <strong>{line.label ?? line.sku}</strong>
-                          <small>
-                            {line.supplier ? `${line.supplier} · ` : ""}
-                            {line.packSize != null &&
-                            line.packUnit &&
-                            !(line.packSize === 1 && line.packUnit === "each")
-                              ? `${line.cases} × ${line.packSize} ${unitLabel(line.packUnit, language)} · `
-                              : ""}
-                            {draft.deliveryZip
-                              ? `${t.shipsTo} ${draft.deliveryZip}`
-                              : ""}
-                          </small>
-                        </div>
-                        <strong>
-                          {line.priceMinor !== null && line.cases !== null
-                            ? money(line.priceMinor * line.cases, language)
-                            : "—"}
-                        </strong>
-                      </li>
-                    ))
-                  )}
-                </ul>
+                <h2>{l("Order summary", "Resumen del pedido", "订单摘要")}</h2>
+                <p className="cart-count">
+                  {included.length}{" "}
+                  {l("items included", "productos incluidos", "项商品")}
+                </p>
                 <div
                   className="summary-total"
                   aria-live="polite"
@@ -545,9 +497,10 @@ export default function Home() {
                   {pending === "approve" ? t.approving : t.approve}
                   <span aria-hidden="true">→</span>
                 </button>
-                <p className="simulation-note">{t.simulation}</p>
-                <div className="summary-note">
-                  <p className="field-label">{t.source}</p>
+                <details className="summary-note">
+                  <summary>
+                    {l("Original note", "Nota original", "查看原单")}
+                  </summary>
                   {photo && (
                     <img
                       className="review-photo"
@@ -556,17 +509,14 @@ export default function Home() {
                     />
                   )}
                   <p>{text}</p>
-                </div>
+                </details>
               </aside>
             </div>
           </section>
         )}
       </main>
       <footer>
-        <span>
-          mise. <span aria-hidden="true">/</span> NOVA HACKATHON 2026
-        </span>
-        <p>{t.fixtures}</p>
+        <span className="footer-brand">Mise</span>
       </footer>
     </div>
   );
