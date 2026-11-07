@@ -1,0 +1,222 @@
+[
+  {
+    "en": "eggs",
+    "es": "huevos",
+    "zh": "鸡蛋",
+    "aliases": [
+      "egg",
+      "huevo",
+      "雞蛋",
+      "鸡蛋"
+    ],
+    "constraints": []
+  },
+  {
+    "en": "oat milk",
+    "es": "leche de avena",
+    "zh": "燕麦奶",
+    "aliases": [
+      "燕麥奶",
+      "oatmilk",
+      "oat mlk",
+      "leche avena",
+      "燕麦乳",
+      "燕麥乳"
+    ],
+    "constraints": []
+  },
+  {
+    "en": "unsweetened oat milk",
+    "es": "leche de avena sin azúcar",
+    "zh": "无糖燕麦奶",
+    "aliases": [
+      "無糖燕麥奶",
+      "oat milk unsweetened"
+    ],
+    "constraints": [
+      "unsweetened"
+    ]
+  },
+  {
+    "en": "dairy milk",
+    "es": "leche de vaca",
+    "zh": "牛奶",
+    "aliases": [
+      "cow's milk",
+      "乳牛奶"
+    ],
+    "constraints": [
+      "dairy"
+    ]
+  },
+  {
+    "en": "tomatoes",
+    "es": "tomates",
+    "zh": "番茄",
+    "aliases": [
+      "tomato",
+      "tomate",
+      "西红柿",
+      "西紅柿",
+      "tomatos"
+    ],
+    "constraints": []
+  },
+  {
+    "en": "romaine",
+    "es": "lechuga romana",
+    "zh": "罗马生菜",
+    "aliases": [
+      "romaine lettuce",
+      "羅馬生菜"
+    ],
+    "constraints": []
+  },
+  {
+    "en": "fresh basil",
+    "es": "albahaca fresca",
+    "zh": "新鲜罗勒",
+    "aliases": [
+      "新鮮羅勒"
+    ],
+    "constraints": [
+      "fresh"
+    ]
+  },
+  {
+    "en": "dried basil",
+    "es": "albahaca seca",
+    "zh": "干罗勒",
+    "aliases": [
+      "乾羅勒",
+      "幹羅勒"
+    ],
+    "constraints": [
+      "dried"
+    ]
+  },
+  {
+    "en": "basil",
+    "es": "albahaca",
+    "zh": "罗勒",
+    "aliases": [
+      "羅勒"
+    ],
+    "constraints": []
+  },
+  {
+    "en": "rice",
+    "es": "arroz",
+    "zh": "米",
+    "aliases": [
+      "大米"
+    ],
+    "constraints": []
+  },
+  {
+    "en": "green lentils",
+    "es": "lentejas verdes",
+    "zh": "绿扁豆",
+    "aliases": [
+      "綠扁豆"
+    ],
+    "constraints": [
+      "green"
+    ]
+  },
+  {
+    "en": "brown lentils",
+    "es": "lentejas marrones",
+    "zh": "棕扁豆",
+    "aliases": [
+      "lentejas pardas"
+    ],
+    "constraints": [
+      "brown"
+    ]
+  },
+  {
+    "en": "red lentils",
+    "es": "lentejas rojas",
+    "zh": "红扁豆",
+    "aliases": [
+      "紅扁豆"
+    ],
+    "constraints": [
+      "red"
+    ]
+  },
+  {
+    "en": "lentils",
+    "es": "lentejas",
+    "zh": "扁豆",
+    "aliases": [],
+    "constraints": []
+  },
+  {
+    "en": "brown rice",
+    "es": "arroz integral",
+    "zh": "糙米",
+    "aliases": [],
+    "constraints": [
+      "brown"
+    ]
+  },
+  {
+    "en": "white rice",
+    "es": "arroz blanco",
+    "zh": "白米",
+    "aliases": [],
+    "constraints": [
+      "white"
+    ]
+  },
+  {
+    "en": "chickpeas",
+    "es": "garbanzos",
+    "zh": "鹰嘴豆",
+    "aliases": [
+      "鷹嘴豆"
+    ],
+    "constraints": []
+  },
+  {
+    "en": "black beans",
+    "es": "frijoles negros",
+    "zh": "黑豆",
+    "aliases": [],
+    "constraints": [
+      "black"
+    ]
+  },
+  {
+    "en": "rolled oats",
+    "es": "avena en hojuelas",
+    "zh": "燕麦片",
+    "aliases": [
+      "燕麥片"
+    ],
+    "constraints": [
+      "rolled"
+    ]
+  },
+  {
+    "en": "almond flour",
+    "es": "harina de almendras",
+    "zh": "杏仁粉",
+    "aliases": [],
+    "constraints": [
+      "flour"
+    ]
+  },
+  {
+    "en": "brown rice flour",
+    "es": "harina de arroz integral",
+    "zh": "糙米粉",
+    "aliases": [],
+    "constraints": [
+      "brown",
+      "flour"
+    ]
+  }
+]

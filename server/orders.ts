@@ -66,7 +66,7 @@ export class Orders {
       throw new OrderError(400, "invalid_language");
     // Decimal commas are ambiguous in bilingual notes. Keep those lines intact for review.
     const lines = text
-      .split(/\r?\n|;|,(?!\d)/)
+      .split(/\r?\n|[;；，、]|,(?!\d)/)
       .map((s) => s.trim())
       .filter(Boolean)
       .map((source) => interpret(randomUUID(), source));

@@ -64,7 +64,7 @@ export async function research(
   )
     throw new OrderError(400, "invalid_location");
   const lines = input.text
-    .split(/\r?\n|;|,(?!\d)/)
+    .split(/\r?\n|[;；，、]|,(?!\d)/)
     .map((x) => x.trim())
     .filter(Boolean);
   if (!lines.length || lines.length > 6)

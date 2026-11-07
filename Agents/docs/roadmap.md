@@ -35,3 +35,10 @@ Photo-first intake follows the frontend owner’s explicit correction on 2026-11
 - [x] Return timestamped supplier evidence, localized caveats, total required pack cost, alternatives and separate provisional vs verified landed-cost rankings.
 - [x] Exercise fixture failures/timeouts and a real Spanish HTTP walkthrough. See [evidence](updates/issue-10.md).
 - [ ] Partner may integrate research UI using the additive contract. Human review/merge remains pending.
+
+## Multilingual ingredient matching · backend lead · [#11](https://github.com/1N4B0M9/NovaHacks2026/issues/11)
+
+- [x] Share structured interpretation across drafts and research; preserve quantities, constraints, verified SKU identity and explicit correction.
+- [x] Exercise Simplified/Traditional Chinese text, ES/EN, fuzzy suggestions and hard-negative substitutions on labeled fixtures.
+- [x] Exercise the real OCR endpoint on a synthetic Chinese image: both ingredients and quantities survived; the model converted one character across scripts. [Evidence](updates/issue-11.md).
+- [ ] Validate handwritten Chinese from multiple people and physical camera capture. Camera/file-picker bug tracked under [#13](https://github.com/1N4B0M9/NovaHacks2026/issues/13).

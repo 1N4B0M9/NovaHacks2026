@@ -26,3 +26,9 @@ Illustrative excerpt of a live item (full data includes alternatives and store s
 ```
 
 Full offers include source and evidence URLs, retrieval timestamp, availability, shippingMinor, feesMinor, minimumPacks, minimumSpendMinor, locationEligible, knownCostMinor and localized caveats. Unknowns are null. The URL for the lowest verified delivered cost is distinct from a provisional known-cost ranking. The location is user context, never proof of delivery. Ask for the destination and supplier terms before claiming eligibility. Do not convert a research result into a draft line automatically. Existing acceptance, versioning and simulated-approval checks still apply to catalog items. See [live walkthrough](updates/issue-10.md).
+
+## Structured match and Chinese transcription · issue #11
+
+POST /api/transcribe accepts {image,sourceLanguage?}. Omit the hint for automatic reading or choose auto, en, es, zh, zh-Hans or zh-Hant. The response remains {text}; malformed hints return 400 invalid_source_language. Manual correction remains available after 503. The hint concerns text in the photograph, independent of the UI language.
+
+Newly interpreted draft lines include match = {source,phrase,quantity,unit,canonical,constraints,candidates,reason}. Older stored drafts can omit match. Each candidate supplies canonical English name, en/es/zh display labels, verified supplier SKU or null, modifiers, reason (exact_alias, partial_phrase or one_edit) and a localized explanation. A suggested identity does not make the order line ready. No extra request/pending state is needed. Example: POST /api/drafts {"text":"雞蛋兩打，燕麦奶一箱","reviewLanguage":"en"} returns a held E180 line requesting 24 each and a ready M1 line for one case. POST /api/research {"text":"新鲜罗勒 2公斤","reviewLanguage":"es"} searches for “fresh basil”; it creates no local SKU. Edit and approval version semantics remain as specified.
