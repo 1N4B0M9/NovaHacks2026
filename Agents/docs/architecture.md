@@ -25,3 +25,9 @@ Check the expected draft version transactionally on edits and approval. Invalida
 | 300–360 min | Fix integration defects and freeze demo data | Rehearse five-minute presentation and prepare submission |
 
 After owner approval, create separate build issues for catalog and order service, merchant review UI, extraction adapter, and integration/demo verification. Both owners share the contract before parallel work. Integration follows the first two components; photo intake can be cut if the text flow demonstrates the full purchasing decision.
+
+## English storefront research · issue #10
+
+Independent of the purchase catalog, POST /api/research starts a per-ingredient worker after scan review. At most two ingredients run concurrently per request. Each queries three fixed English US storefronts with a 6.5-second deadline per ingredient. Each supplier receives one search and one currency lookup, plus at most two product-detail reads; search limits to six candidates. Each redirect is restricted to the same supplier and capped. No model calls or paid search service. Technical references: [Shopify predictive search](https://shopify.dev/docs/api/ajax/reference/predictive-search) and [product data](https://shopify.dev/docs/api/ajax/reference/product).
+
+The normalizer matches explicit English/Spanish aliases and units, or accepts a merchant-confirmed English correction. The provider preserves authoritative listing fields, filters incompatible product titles, and attaches a source URL and observation time. Deterministic ranking converts compatible units, rounds up to whole packs, and reports excess. Unavailable, geographically ineligible, incompatible and unpriced offers cannot win. Unknown costs stay provisional; known landed offers have their own tier. No durable research job, browser checkout, external SKU import, or automatic ordering.
