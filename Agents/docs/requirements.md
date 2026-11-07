@@ -10,7 +10,7 @@ One merchant, one supplier and one demo language pair. Use English and illustrat
 - Approval stays blocked until the owner accepts the full egg case or explicitly skips eggs. Buying includes one case of each product. Skipping retains the egg line in review while the final supplier preview and total include only the milk.
 - Missing units, unknown items and illegible text prompt a correction or skip. A merchant can compare corrections with the original. Skipping every line leaves nothing to approve.
 - Supplier preview uses the supplier's SKU, pack, quantity and price regardless of the review language. Approval creates one simulated order even if the button is tapped twice.
-- Test two unfamiliar notes, including a mixed-language alias and a unit ambiguity. If photo extraction fails, the user can paste or correct text and complete the same workflow.
+- Test two unfamiliar notes, including a mixed-language alias and a unit ambiguity. If photo extraction fails, show the failure and offer a new photo or explicit manual transcription of the photographed note. Successful extraction must remain editable before supplier matching.
 
 ## Boundaries
 

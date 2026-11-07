@@ -13,12 +13,13 @@ Both agents maintain this checklist. Each owner updates their section in the sam
 
 ## Frontend · partner · [#3](https://github.com/1N4B0M9/NovaHacks2026/issues/3)
 
-Partner reports a photo-first UI and nine passing browser checks on their local integration checkout. Lead verification awaits the published frontend revision. Direct typed intake is currently an open scope difference from the approved requirements.
+Photo-first intake follows the frontend owner’s explicit correction on 2026-11-07 ([source relayed in #3](https://github.com/1N4B0M9/NovaHacks2026/issues/3#issuecomment-6710867168)); the requirements reflect that correction. No default pasted-list entry remains. Lead verification is separate from the partner's recorded checks below.
 
-- [ ] Capture typed/pasted notes and chosen review language on mobile. Optional photo input can fall back to editable text.
-- [ ] Show original words, interpretation, supplier item, pack, price and localized review reason. Support correction, buy and explicit skip.
-- [ ] Show provisional/final totals; block unresolved or empty orders; recover from stale version; render the simulated supplier receipt.
-- [ ] Verify loading, errors, retry and both buying outcomes against the backend. Link frontend PR, tested revision and evidence.
+- [x] Capture/upload a handwritten-note photo and chosen review language on mobile; display editable transcription beside the source image. Explicit manual transcription is available after scan failure. Successful OCR handoff verified with fixtures only.
+- [x] Show original words, interpretation, supplier item, pack, price and localized review reason. Support correction, buy and explicit skip.
+- [x] Show provisional/final totals; block unresolved or empty orders; recover from stale version; render the simulated supplier receipt.
+- [x] Verify loading/errors/retry with fixtures and both buying outcomes against the backend. Frontend app/test revision `1a873b2943e0782c42f0fc284818fae7207612b9` plus backend `58559d16783d3e74d619b4d476b566bbc19482da`: 15 fixture checks, 9 live-backend checks, typecheck, production build, 5 backend tests passed. [Evidence and screenshots](updates/issue-3.md). Frontend [PR #9](https://github.com/1N4B0M9/NovaHacks2026/pull/9), branch `frontend-review`. The updated backend at `24ee7f8` also passed all 11 regression tests; its runtime API source is unchanged from `58559d1`.
+- [ ] Verify real handwriting transcription with the configured vision provider and native camera hardware. Live image requests returned 503 in the test environment; fallback was exercised. Fluent language review is still needed.
 
 ## Integration and release · lead + partner · [#5](https://github.com/1N4B0M9/NovaHacks2026/issues/5)
 
