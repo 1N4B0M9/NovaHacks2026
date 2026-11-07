@@ -211,13 +211,19 @@ export default function Home() {
               : ""}
         </div>
         {!draft ? (
-          <section className="intake-layout">
-            <div className="intro">
-              <h1 ref={heading} tabIndex={-1}>
-                {l("Scan your order.", "Escanea tu pedido.", "扫描订货单。")}
-              </h1>
-              <OrderTicket language={language} />
-            </div>
+          <section
+            className={
+              intakeMode ? "intake-layout confirming" : "intake-layout"
+            }
+          >
+            {!intakeMode && (
+              <div className="intro">
+                <h1 ref={heading} tabIndex={-1}>
+                  {l("Scan your order.", "Escanea tu pedido.", "扫描订货单。")}
+                </h1>
+                <OrderTicket language={language} />
+              </div>
+            )}
             <form
               className="intake-card"
               onSubmit={(event) => {
@@ -235,45 +241,52 @@ export default function Home() {
                   );
               }}
             >
-              <h2>{l("Your note", "Tu nota", "手写清单")}</h2>
-
-              <PhotoIntake
-                locationField={
-                  <div>
-                    {" "}
-                    <label className="field-label" htmlFor="zip-code">
-                      {t.zip}
-                    </label>
-                    <input
-                      id="zip-code"
-                      inputMode="numeric"
-                      autoComplete="postal-code"
-                      value={zip}
-                      placeholder="10011"
-                      maxLength={10}
-                      required
-                      disabled={!!pending || scanning}
-                      onChange={(event) => setZip(event.target.value)}
-                    />
-                  </div>
-                }
-                language={language}
-                t={t}
-                photo={photo}
-                disabled={!!pending}
-                onPhoto={setPhoto}
-                onStart={() => {
-                  setText("");
-                  setIntakeMode(null);
-                  setError("");
-                }}
-                onText={(value) => {
-                  setText(value);
-                  setIntakeMode("extracted");
-                }}
-                onManual={() => setIntakeMode("manual")}
-                onBusy={setScanning}
-              />
+              <details
+                className="intake-controls"
+                open={!intakeMode || !destination}
+              >
+                <summary>
+                  {intakeMode
+                    ? l("Photo and settings", "Foto y ajustes", "照片与设置")
+                    : l("Your note", "Tu nota", "手写清单")}
+                </summary>
+                <PhotoIntake
+                  locationField={
+                    <div>
+                      <label className="field-label" htmlFor="zip-code">
+                        {t.zip}
+                      </label>
+                      <input
+                        id="zip-code"
+                        inputMode="numeric"
+                        autoComplete="postal-code"
+                        value={zip}
+                        placeholder="10011"
+                        maxLength={10}
+                        required
+                        disabled={!!pending || scanning}
+                        onChange={(event) => setZip(event.target.value)}
+                      />
+                    </div>
+                  }
+                  language={language}
+                  t={t}
+                  photo={photo}
+                  disabled={!!pending}
+                  onPhoto={setPhoto}
+                  onStart={() => {
+                    setText("");
+                    setIntakeMode(null);
+                    setError("");
+                  }}
+                  onText={(value) => {
+                    setText(value);
+                    setIntakeMode("extracted");
+                  }}
+                  onManual={() => setIntakeMode("manual")}
+                  onBusy={setScanning}
+                />
+              </details>
               {intakeMode && (
                 <div className="extracted-note">
                   <ParsedList

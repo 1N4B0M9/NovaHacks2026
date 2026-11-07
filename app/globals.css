@@ -1275,4 +1275,12 @@ summary{cursor:pointer;font-size:14px;}
  .receipt-lines{max-height:40vh;}
 }
 @media(max-width:350px){.photo-actions{grid-template-columns:1fr;}.steps{gap:12px;}}
+.intake-controls > summary { font: 29px var(--font-serif); margin-bottom: 20px; list-style:none; }
+.intake-controls > summary::-webkit-details-marker {display:none;}
+.confirming {display:block;max-width:720px;margin:0 auto;}
+.confirming .intake-controls > summary {font:14px var(--font-sans);list-style:revert;margin:0;}
+.confirming .intake-controls[open] > summary {margin-bottom:16px;}
+.confirming .parsed-title h1 {font-size:clamp(28px,4vw,42px);letter-spacing:-.035em;white-space:normal;}
+.confirming .extracted-note {margin-top:18px;padding-top:18px;}
+.confirming .parsed-rows {max-height: min(48vh,430px);}
 

@@ -43,7 +43,7 @@ export function ParsedList({
       aria-label={t("Parsed list", "Lista de ingredientes", "食材清单")}
     >
       <div className="parsed-title">
-        <h2>{t("Check your list", "Revisa tu lista", "核对清单")}</h2>
+        <h1>{t("Check your list", "Revisa tu lista", "核对清单")}</h1>
         <span>{rows.filter((r) => r.value.trim()).length}</span>
       </div>
       <div className="parsed-rows" ref={list}>
