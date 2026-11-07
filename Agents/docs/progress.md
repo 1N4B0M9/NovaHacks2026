@@ -11,3 +11,5 @@ Backend runs on a single Node 24+ host. The fixture language pair is English and
 Backend issue #10 adds post-scan ingredient deal research. See the [implementation note and live supplier evidence](updates/issue-10.md). The contract has been posted to frontend issue #3.
 
 Issue #10 is merged. Backend #11 implements shared ingredient matching and Chinese source recognition. The [per-issue report](updates/issue-11.md) separates tested text behavior and printed-image results from pending real handwriting validation.
+
+The backend portion of #14 builds on PR #15. Spanish recipe tests and live supplier coverage are recorded in [issue-14.md](updates/issue-14.md).

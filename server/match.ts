@@ -13,6 +13,8 @@ export const unitScale = {
   each: ["count", 1],
   carton: ["carton", 1],
   case: ["case", 1],
+  tsp: ["teaspoon", 1],
+  cup: ["cup", 1],
 } as const;
 export type Unit = keyof typeof unitScale;
 export type Ingredient = {
@@ -32,6 +34,15 @@ export const fold = (s: string) =>
     .replace(/\s+/g, " ")
     .trim();
 const unitAliases: Record<string, string> = {
+  tsp: "tsp",
+  cucharadita: "tsp",
+  cucharaditas: "tsp",
+  teaspoon: "tsp",
+  teaspoons: "tsp",
+  cup: "cup",
+  cups: "cup",
+  taza: "cup",
+  tazas: "cup",
   kg: "kg",
   kilograms: "kg",
   kilos: "kg",
@@ -83,7 +94,22 @@ const unitAliases: Record<string, string> = {
   docenas: "dozen",
   打: "dozen",
 };
-const numberPattern = "(?:[0-9]+(?:[.,][0-9]+)?|[一二两兩三四五六七八九十]+)";
+const numberWords: Record<string, number> = {
+  un: 1,
+  una: 1,
+  uno: 1,
+  dos: 2,
+  tres: 3,
+  cuatro: 4,
+  medio: 0.5,
+  media: 0.5,
+  one: 1,
+  two: 2,
+};
+const numberPattern =
+  "(?:[0-9]+(?:\\s+[0-9]+)?/[0-9]+|[0-9]+(?:[.,][0-9]+)?|(?:" +
+  Object.keys(numberWords).join("|") +
+  ")\\b|[一二两兩三四五六七八九十]+)";
 const unitPattern = Object.keys(unitAliases)
   .sort((a, b) => b.length - a.length)
   .join("|");
@@ -106,6 +132,10 @@ const numerals: Record<string, number> = {
   九: 9,
 };
 function numeric(s: string) {
+  if (Object.hasOwn(numberWords, s)) return numberWords[s];
+  const fraction = /^(?:(\d+)\s+)?(\d+)\/(\d+)$/.exec(s);
+  if (fraction)
+    return Number(fraction[1] ?? 0) + Number(fraction[2]) / Number(fraction[3]);
   if (/^\d/.test(s)) return Number(s.replace(",", "."));
   if (numerals[s]) return numerals[s];
   const match = /^([一二两兩三四五六七八九]?)十([一二三四五六七八九]?)$/.exec(
@@ -196,6 +226,18 @@ function candidates(phrase: string) {
     .filter((e) => e.keys.some((k) => k.length >= 5 && oneEdit(phrase, k)))
     .map((e) => candidate(e, "one_edit"));
 }
+export function isHeading(source: string) {
+  return /^(?:receta|reseta)\s+(?:de|para)\s+\S|^recipe\s+for\s+\S/.test(
+    fold(source),
+  );
+}
+const countable = new Set([
+  "whole chicken",
+  "potatoes",
+  "onion",
+  "tomatoes",
+  "green chili",
+]);
 export function matchIngredient(source: string) {
   const s = fold(source);
   const first = prefix.exec(s);
@@ -213,24 +255,31 @@ export function matchIngredient(source: string) {
     }
   }
   const value = raw ? numeric(raw) : null;
-  const unit = rawUnit ? unitAliases[rawUnit] : null;
+  let unit = rawUnit ? unitAliases[rawUnit] : null;
   const quantity =
     value !== null && Number.isFinite(value)
       ? value * (unit === "dozen" ? 12 : 1)
       : null;
-  const options = candidates(phrase);
+  // Preparation belongs to the recipe and should not become a retail product requirement.
+  const preparation: string[] = phrase.match(/\b(?:picad[oa]s?|chopped)\s*$/g) ?? [];
+  const identity = preparation.length
+    ? phrase.slice(0, -preparation[0].length).trim()
+    : phrase;
+  const options = candidates(identity);
   const exact =
     options.length === 1 && options[0].reason === "exact_alias"
       ? options[0]
       : null;
   const invalid =
-    /[?？［\[\]]|\d\s*[-–/]\s*\d/.test(s) ||
+    /[?？［\[\]]|\d\s*[-–]\s*\d/.test(s) ||
     (raw !== undefined &&
       (quantity === null ||
         quantity <= 0 ||
         value! > 100000 ||
         (["case", "dozen", "each", "carton"].includes(unit ?? "") &&
           !Number.isInteger(value))));
+  if (!unit && exact && quantity !== null && countable.has(exact.canonical))
+    unit = "each";
   let reason:
     | "unrecognized_input"
     | "ambiguous_item"
@@ -263,7 +312,19 @@ export function matchIngredient(source: string) {
       if (residual) constraints = [residual];
     }
   }
+  const heading = isHeading(source);
+  const kind = heading ? "heading" : exact ? "ingredient" : "unclear";
+  const purchaseStatus = heading
+    ? "heading"
+    : reason
+      ? "needs_clarification"
+      : exact?.sku
+        ? "local_sku"
+        : "no_local_sku";
   return {
+    kind,
+    purchaseStatus,
+    preparation,
     source,
     phrase,
     quantity,

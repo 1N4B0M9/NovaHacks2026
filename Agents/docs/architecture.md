@@ -35,3 +35,6 @@ The normalizer matches explicit English/Spanish aliases and units, or accepts a 
 ## Post-transcription matching · issue #11
 
 server/match.ts reads the domain vocabulary and verified catalog, parses a quantity plus explicit unit before or after the ingredient and normalizes common Chinese numerals/classifiers. Exact aliases are eligible for automatic matching. One-edit Latin candidates and partial or ambiguous phrases remain blocked. No paid inference is added to either draft edits or research. The order service alone computes packs, prices and approval. The OCR route supports an optional input-language hint and requests preservation of mixed scripts and uncertain spans. See the [evaluation and live Chinese test](updates/issue-11.md).
+
+## Recipe inputs
+The shared matcher separates kitchen preparation from retail constraints and stores recognized supplier-independent identities. Titles are kept as draft metadata; research reports them without searching. Fractions and recipe units can be used for research. No mass/count or density conversion is inferred. Up to 16 lines remain bounded by two active ingredient workers and individual deadlines.

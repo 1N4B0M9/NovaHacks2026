@@ -1,14 +1,86 @@
 [
   {
+    "en": "whole chicken",
+    "es": "pollo entero",
+    "zh": "整鸡",
+    "aliases": ["整雞"],
+    "constraints": ["whole"]
+  },
+  {
+    "en": "potatoes",
+    "es": "papas",
+    "zh": "土豆",
+    "aliases": ["papa", "patata", "patatas", "potato"],
+    "constraints": []
+  },
+  {
+    "en": "onion",
+    "es": "cebolla",
+    "zh": "洋葱",
+    "aliases": ["cebollas", "洋蔥"],
+    "constraints": []
+  },
+  {
+    "en": "garlic",
+    "es": "ajo",
+    "zh": "大蒜",
+    "aliases": ["ajos"],
+    "constraints": []
+  },
+  {
+    "en": "green chili",
+    "es": "chile verde",
+    "zh": "青辣椒",
+    "aliases": ["chiles verdes"],
+    "constraints": ["green"]
+  },
+  {
+    "en": "cilantro",
+    "es": "cilantro",
+    "zh": "香菜",
+    "aliases": [],
+    "constraints": []
+  },
+  {
+    "en": "salt",
+    "es": "sal",
+    "zh": "盐",
+    "aliases": ["鹽"],
+    "constraints": []
+  },
+  {
+    "en": "black pepper",
+    "es": "pimienta negra",
+    "zh": "黑胡椒",
+    "aliases": [],
+    "constraints": ["black"]
+  },
+  {
+    "en": "pepper",
+    "es": "pimienta",
+    "zh": "胡椒",
+    "aliases": [],
+    "constraints": []
+  },
+  {
+    "en": "chicken bouillon cubes",
+    "es": "cubitos de caldo de pollo",
+    "zh": "鸡汤块",
+    "aliases": ["cubitos de pollo", "雞湯塊"],
+    "constraints": ["bouillon"]
+  },
+  {
+    "en": "corn flour",
+    "es": "harina de maíz",
+    "zh": "玉米粉",
+    "aliases": ["harina de maiz"],
+    "constraints": []
+  },
+  {
     "en": "eggs",
     "es": "huevos",
     "zh": "鸡蛋",
-    "aliases": [
-      "egg",
-      "huevo",
-      "雞蛋",
-      "鸡蛋"
-    ],
+    "aliases": ["egg", "huevo", "雞蛋", "鸡蛋"],
     "constraints": []
   },
   {
@@ -29,122 +101,78 @@
     "en": "unsweetened oat milk",
     "es": "leche de avena sin azúcar",
     "zh": "无糖燕麦奶",
-    "aliases": [
-      "無糖燕麥奶",
-      "oat milk unsweetened"
-    ],
-    "constraints": [
-      "unsweetened"
-    ]
+    "aliases": ["無糖燕麥奶", "oat milk unsweetened"],
+    "constraints": ["unsweetened"]
   },
   {
     "en": "dairy milk",
     "es": "leche de vaca",
     "zh": "牛奶",
-    "aliases": [
-      "cow's milk",
-      "乳牛奶"
-    ],
-    "constraints": [
-      "dairy"
-    ]
+    "aliases": ["cow's milk", "乳牛奶"],
+    "constraints": ["dairy"]
   },
   {
     "en": "tomatoes",
     "es": "tomates",
     "zh": "番茄",
-    "aliases": [
-      "tomato",
-      "tomate",
-      "西红柿",
-      "西紅柿",
-      "tomatos"
-    ],
+    "aliases": ["tomato", "tomate", "西红柿", "西紅柿", "tomatos"],
     "constraints": []
   },
   {
     "en": "romaine",
     "es": "lechuga romana",
     "zh": "罗马生菜",
-    "aliases": [
-      "romaine lettuce",
-      "羅馬生菜"
-    ],
+    "aliases": ["romaine lettuce", "羅馬生菜"],
     "constraints": []
   },
   {
     "en": "fresh basil",
     "es": "albahaca fresca",
     "zh": "新鲜罗勒",
-    "aliases": [
-      "新鮮羅勒"
-    ],
-    "constraints": [
-      "fresh"
-    ]
+    "aliases": ["新鮮羅勒"],
+    "constraints": ["fresh"]
   },
   {
     "en": "dried basil",
     "es": "albahaca seca",
     "zh": "干罗勒",
-    "aliases": [
-      "乾羅勒",
-      "幹羅勒"
-    ],
-    "constraints": [
-      "dried"
-    ]
+    "aliases": ["乾羅勒", "幹羅勒"],
+    "constraints": ["dried"]
   },
   {
     "en": "basil",
     "es": "albahaca",
     "zh": "罗勒",
-    "aliases": [
-      "羅勒"
-    ],
+    "aliases": ["羅勒"],
     "constraints": []
   },
   {
     "en": "rice",
     "es": "arroz",
     "zh": "米",
-    "aliases": [
-      "大米"
-    ],
+    "aliases": ["大米"],
     "constraints": []
   },
   {
     "en": "green lentils",
     "es": "lentejas verdes",
     "zh": "绿扁豆",
-    "aliases": [
-      "綠扁豆"
-    ],
-    "constraints": [
-      "green"
-    ]
+    "aliases": ["綠扁豆"],
+    "constraints": ["green"]
   },
   {
     "en": "brown lentils",
     "es": "lentejas marrones",
     "zh": "棕扁豆",
-    "aliases": [
-      "lentejas pardas"
-    ],
-    "constraints": [
-      "brown"
-    ]
+    "aliases": ["lentejas pardas"],
+    "constraints": ["brown"]
   },
   {
     "en": "red lentils",
     "es": "lentejas rojas",
     "zh": "红扁豆",
-    "aliases": [
-      "紅扁豆"
-    ],
-    "constraints": [
-      "red"
-    ]
+    "aliases": ["紅扁豆"],
+    "constraints": ["red"]
   },
   {
     "en": "lentils",
@@ -158,26 +186,20 @@
     "es": "arroz integral",
     "zh": "糙米",
     "aliases": [],
-    "constraints": [
-      "brown"
-    ]
+    "constraints": ["brown"]
   },
   {
     "en": "white rice",
     "es": "arroz blanco",
     "zh": "白米",
     "aliases": [],
-    "constraints": [
-      "white"
-    ]
+    "constraints": ["white"]
   },
   {
     "en": "chickpeas",
     "es": "garbanzos",
     "zh": "鹰嘴豆",
-    "aliases": [
-      "鷹嘴豆"
-    ],
+    "aliases": ["鷹嘴豆"],
     "constraints": []
   },
   {
@@ -185,38 +207,27 @@
     "es": "frijoles negros",
     "zh": "黑豆",
     "aliases": [],
-    "constraints": [
-      "black"
-    ]
+    "constraints": ["black"]
   },
   {
     "en": "rolled oats",
     "es": "avena en hojuelas",
     "zh": "燕麦片",
-    "aliases": [
-      "燕麥片"
-    ],
-    "constraints": [
-      "rolled"
-    ]
+    "aliases": ["燕麥片"],
+    "constraints": ["rolled"]
   },
   {
     "en": "almond flour",
     "es": "harina de almendras",
     "zh": "杏仁粉",
     "aliases": [],
-    "constraints": [
-      "flour"
-    ]
+    "constraints": ["flour"]
   },
   {
     "en": "brown rice flour",
     "es": "harina de arroz integral",
     "zh": "糙米粉",
     "aliases": [],
-    "constraints": [
-      "brown",
-      "flour"
-    ]
+    "constraints": ["brown", "flour"]
   }
 ]

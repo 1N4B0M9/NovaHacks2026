@@ -42,3 +42,7 @@ Photo-first intake follows the frontend owner’s explicit correction on 2026-11
 - [x] Exercise Simplified/Traditional Chinese text, ES/EN, fuzzy suggestions and hard-negative substitutions on labeled fixtures.
 - [x] Exercise the real OCR endpoint on a synthetic Chinese image: both ingredients and quantities survived; the model converted one character across scripts. [Evidence](updates/issue-11.md).
 - [ ] Validate handwritten Chinese from multiple people and physical camera capture. Camera/file-picker bug tracked under [#13](https://github.com/1N4B0M9/NovaHacks2026/issues/13).
+
+## Recipe matching · [#14](https://github.com/1N4B0M9/NovaHacks2026/issues/14)
+- [x] Recognize ingredient identity and written measures separately from verified supplier availability; exercise the supplied recipe and another Spanish note through production endpoints.
+- [ ] Partner frontend integration and browser verification. [Backend evidence](updates/issue-14.md).

@@ -25,3 +25,6 @@ Multi-store research is available after merchant review. Preserve source lines a
 ## Matching extension · issue #11
 
 Accept supported English, Spanish, Simplified and Traditional Chinese ingredient text from the verified transcription. Draft and research share canonical ingredient matching. Preserve modifiers, source words, quantity and unit. Automatically resolve only exact compatible identities; show fuzzy or ambiguous candidates for correction. The merchant still chooses English or Spanish for review. Chinese input support is separate from translated interface copy.
+
+## Spanish recipe regression
+The manually transcribed sample in issue #14 must distinguish a recipe title, recognized ingredients, unresolved readings, no verified supplier SKU and no research results. Test fractions, mixed fractions, preparation words, regional modifiers and unsupported conversions without fabricating prices or stock.
