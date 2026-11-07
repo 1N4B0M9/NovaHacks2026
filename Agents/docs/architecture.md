@@ -53,3 +53,6 @@ Client research cards show possible products, observed per-pack price/size, comp
 
 ## Local Chinese recognition
 The intake can use an offline Tesseract.js reader with bundled chi_sim data. A bounded Node child process decodes one block of text and terminates; no model API key is required. Both engines share the existing editable transcript and deterministic order path. See [demo and verification](updates/issue-28.md).
+## Public product index · issue #26
+
+If ranking finds no compatible storefront offer, one request asks `https://search.openfoodfacts.org/search` for the English ingredient name. The request is limited to that host, eight hits, and a four-second deadline inside the existing ingredient budget. Product links are built only as `https://world.openfoodfacts.org/product/{code}`. Titles still pass the same compatibility rules, including form and salsa exclusions. Pack text is parsed when it is unambiguous. Price and delivery fields stay null, so a public listing cannot win a delivered-cost comparison. General web search engines responded with a human-check page or HTTP 403 and are not queried. See [ADR 004](decisions/ADR-004-public-product-search.md).

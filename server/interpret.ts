@@ -14,6 +14,8 @@ export type Line = {
   packUnit: string | null;
   priceMinor: number | null;
   cases: number | null;
+  supplier?: string | null;
+  productUrl?: string | null;
   status: "ready" | "needs_review" | "skipped";
   reason:
     | "unknown_item"

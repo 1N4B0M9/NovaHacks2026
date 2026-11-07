@@ -13,7 +13,7 @@ export type Offer = {
   productId: string;
   url: string;
   evidenceUrl: string;
-  evidenceKind: "supplier_search" | "supplier_product";
+  evidenceKind: "supplier_search" | "supplier_product" | "web_search";
   retrievedAt: string;
   priceMinor: number | null;
   currency: string | null;
@@ -90,6 +90,10 @@ export function compareOffer(
       ? merchandise! + offer.shippingMinor + offer.feesMinor
       : null;
   const caveats: string[] = [];
+  if (offer.evidenceKind === "web_search")
+    caveats.push(
+      localize(language, "Public product listing. Price and delivery are not verified.", "Ficha pública. El precio y la entrega no están verificados.", "公开商品信息。价格与配送尚未核实。"),
+    );
   if (assessment.compatibility === "needs_confirmation")
     caveats.push(
       localize(
