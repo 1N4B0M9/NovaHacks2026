@@ -1,4 +1,4 @@
-import { OrderError } from "./orders";
+import { OrderError } from "./order-error";
 
 export async function jsonAction(
   request: Request,

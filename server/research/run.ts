@@ -1,4 +1,4 @@
-import { OrderError } from "../orders";
+import { OrderError } from "../order-error";
 import { isHeading } from "../match";
 import {
   ingredient,
