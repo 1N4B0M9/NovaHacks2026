@@ -1283,4 +1283,3 @@ summary{cursor:pointer;font-size:14px;}
 .confirming .parsed-title h1 {font-size:clamp(28px,4vw,42px);letter-spacing:-.035em;white-space:normal;}
 .confirming .extracted-note {margin-top:18px;padding-top:18px;}
 .confirming .parsed-rows {max-height: min(48vh,430px);}
-
