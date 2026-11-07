@@ -261,7 +261,8 @@ export function matchIngredient(source: string) {
       ? value * (unit === "dozen" ? 12 : 1)
       : null;
   // Preparation belongs to the recipe and should not become a retail product requirement.
-  const preparation: string[] = phrase.match(/\b(?:picad[oa]s?|chopped)\s*$/g) ?? [];
+  const preparation: string[] =
+    phrase.match(/\b(?:picad[oa]s?|chopped)\s*$/g) ?? [];
   const identity = preparation.length
     ? phrase.slice(0, -preparation[0].length).trim()
     : phrase;
@@ -276,7 +277,7 @@ export function matchIngredient(source: string) {
       (quantity === null ||
         quantity <= 0 ||
         value! > 100000 ||
-        (["case", "dozen", "each", "carton"].includes(unit ?? "") &&
+        (["case", "dozen", "carton"].includes(unit ?? "") &&
           !Number.isInteger(value))));
   if (!unit && exact && quantity !== null && countable.has(exact.canonical))
     unit = "each";

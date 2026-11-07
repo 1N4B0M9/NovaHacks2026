@@ -64,13 +64,15 @@ test("recipe research keeps whole-line evidence and skips the heading and unreso
     result.items
       .filter((i) => i.status === "needs_review")
       .map((i) => i.source),
-    [
-      "4 ajos picados",
-      "2 cubitos de pollo",
-      "1 1/2 taza harina de maiz dorado",
-    ],
+    ["1 1/2 taza harina de maiz dorado"],
   );
   assert.equal(result.items.find((i) => i.query === "salt")?.unit, "tsp");
+  // Missing garlic/bouillon units now permit discovery but not quantity comparison.
+  for (const query of ["garlic", "chicken bouillon cubes"]) {
+    const item = result.items.find((i) => i.query === query)!;
+    assert.equal(item.unit, null);
+    assert.equal(item.status, "no_results");
+  }
 });
 test("second Spanish note and unsupported conversions", () => {
   assert.equal(ingredient("dos cebollas picadas")?.query, "onion");

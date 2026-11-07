@@ -34,7 +34,7 @@ Photo-first intake follows the frontend owner’s explicit correction on 2026-11
 - [x] Normalize confirmed English/Spanish ingredient lines, hold ambiguities, and research public English storefronts with bounded workers.
 - [x] Return timestamped supplier evidence, localized caveats, total required pack cost, alternatives and separate provisional vs verified landed-cost rankings.
 - [x] Exercise fixture failures/timeouts and a real Spanish HTTP walkthrough. See [evidence](updates/issue-10.md).
-- [ ] Partner may integrate research UI using the additive contract. Human review/merge remains pending.
+- [x] Partner integrated per-line supplier research, recognized/clarification/no-catalog states and preserved headings on `codex/fix-recipe-matching`, based on PR #16. Browser and API evidence: [frontend recipe report](updates/issue-14-frontend.md). Human review/merge remains pending.
 
 ## Multilingual ingredient matching · backend lead · [#11](https://github.com/1N4B0M9/NovaHacks2026/issues/11)
 
@@ -46,3 +46,12 @@ Photo-first intake follows the frontend owner’s explicit correction on 2026-11
 ## Recipe matching · [#14](https://github.com/1N4B0M9/NovaHacks2026/issues/14)
 - [x] Recognize ingredient identity and written measures separately from verified supplier availability; exercise the supplied recipe and another Spanish note through production endpoints.
 - [ ] Partner frontend integration and browser verification. [Backend evidence](updates/issue-14.md).
+
+## Small quantities and candidate discovery · partner · [#20](https://github.com/1N4B0M9/NovaHacks2026/issues/20)
+
+- [x] Separate fractional recipe demand from purchasable packs; expose minimums, increments, maximums, surplus and unknown conversions.
+- [x] Return bounded product candidates with explicit compatibility and nullable winner; retain observed pack prices without a cost conversion.
+- [x] Verify public Ginger Fresh grocery access and add the source with the same bounded request policy. Location eligibility remains unknown.
+- [x] Add selectable interpretation corrections, subordinate catalog status, and block approval during unsaved edits.
+- [x] Add backend and mobile browser regressions using mocked OCR; record live discovery separately in [issue-20.md](updates/issue-20.md).
+- [ ] Lead review and human merge of the issue #20 PR.
