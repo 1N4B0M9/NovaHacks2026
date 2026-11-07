@@ -4,6 +4,7 @@ import { ingredient, matchesTitle } from "./research/ingredient";
 import { rank, type Offer } from "./research/rank";
 import { research } from "./research/run";
 import { searchStore, suppliers } from "./research/storefront";
+import { productsFromSearch } from "./research/web";
 
 const item = ingredient("2 kg de lentejas verdes")!;
 test("merchant-confirmed translation preserves the source for an unfamiliar ingredient", async () => {
@@ -25,6 +26,8 @@ test("merchant-confirmed translation preserves the source for an unfamiliar ingr
       assert.equal(item.query, "sorghum");
       return [];
     },
+    undefined,
+    async () => [],
   );
   assert.equal(res.items[0].source, "¿2 kg de sorgo?");
   assert.equal(res.items[0].description, "sorgo");
@@ -189,15 +192,21 @@ test("worker failures preserve other results; unclear lines never make requests"
 });
 test("no results differ from failed providers", async () => {
   const input = { text: "1 dozen eggs", reviewLanguage: "en" };
+  const noWeb = async () => [];
   assert.equal(
-    (await research(input, async () => [])).items[0].status,
+    (await research(input, async () => [], undefined, noWeb)).items[0].status,
     "no_results",
   );
   assert.equal(
     (
-      await research(input, async () => {
-        throw Error();
-      })
+      await research(
+        input,
+        async () => {
+          throw Error();
+        },
+        undefined,
+        noWeb,
+      )
     ).status,
     "failed",
   );
@@ -220,6 +229,7 @@ test("slow ingredient times out independently", async () => {
       });
     },
     20,
+    async () => [],
   );
   assert.deepEqual(
     r.items.map((i) => i.status),
@@ -241,10 +251,83 @@ test("at most two ingredients start concurrently and input order is preserved", 
       active--;
       return [];
     },
+    undefined,
+    async () => [],
   );
   assert.equal(peak, 2 * suppliers.length);
   assert.deepEqual(
     r.items.map((i) => i.query),
     ["rice", "tomatoes", "lentils", "chickpeas"],
   );
+});
+test("public product listings fill an empty storefront search without inventing a price", async () => {
+  let calls = 0;
+  const result = await research(
+    { text: "1 lb onion", reviewLanguage: "en" },
+    async () => [],
+    undefined,
+    async () => {
+      calls++;
+      return productsFromSearch(
+        "onion",
+        {
+          hits: [
+            {
+              code: "20175887",
+              product_name: "Red onions",
+              quantity: "750g",
+            },
+            {
+              code: "11111111",
+              product_name: "Onion powder",
+              quantity: "50 g",
+            },
+            {
+              code: "222",
+              product_name: "Onion",
+              quantity: "1 each",
+            },
+            { code: "not-a-code", product_name: "Onion", quantity: "1 lb" },
+          ],
+        },
+        "https://search.openfoodfacts.org/search?q=onion",
+        "2026-11-07T19:40:00.000Z",
+      );
+    },
+  );
+  assert.equal(calls, 1);
+  const item = result.items[0];
+  assert.equal(item.status, "completed");
+  assert.equal(item.offers.length, 1);
+  assert.equal(item.offers[0].productId, "20175887");
+  assert.equal(item.offers[0].evidenceKind, "web_search");
+  assert.equal(item.offers[0].priceMinor, null);
+  assert.equal(item.offers[0].packQuantity, 750);
+  assert.equal(item.offers[0].packUnit, "g");
+  assert.equal(item.bestCandidateId, null);
+  assert.equal(item.stores.at(-1)?.supplier, "Open Food Facts");
+  assert.match(item.message, /Public product listings/);
+  assert.match(item.offers[0].url, /^https:\/\/world\.openfoodfacts\.org\/product\/20175887$/);
+});
+test("a storefront match skips the public product index", async () => {
+  let calls = 0;
+  const result = await research(
+    { text: "1 lb green lentils", reviewLanguage: "en" },
+    async () => [example],
+    undefined,
+    async () => {
+      calls++;
+      return [];
+    },
+  );
+  assert.equal(calls, 0);
+  assert.equal(result.items[0].offers[0].supplier, "Test store");
+  assert.equal(result.items[0].stores.some((s) => s.supplier === "Open Food Facts"), false);
+});
+test("chili plurals match and salsa does not count as the herb", () => {
+  assert.equal(matchesTitle("green chili", "Green chilies"), true);
+  assert.equal(matchesTitle("cilantro", "Cilantro Salsa"), false);
+  assert.equal(matchesTitle("garlic", "Garlic Baguettes"), false);
+  assert.equal(matchesTitle("garlic", "Garlic Bread"), false);
+  assert.equal(matchesTitle("potatoes", "Potato Starch"), false);
 });

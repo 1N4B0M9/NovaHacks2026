@@ -9,7 +9,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f7f7f0",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fff9f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#2a2024" },
+  ],
 };
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

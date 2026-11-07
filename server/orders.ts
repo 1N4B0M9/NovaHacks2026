@@ -5,6 +5,7 @@ import { DatabaseSync } from "node:sqlite";
 import { interpret, type Line } from "./interpret";
 import { isHeading } from "./match";
 import { OrderError } from "./order-error";
+import { research } from "./research/run";
 export { OrderError } from "./order-error";
 
 type Input = Record<string, unknown>;
@@ -16,6 +17,7 @@ type Draft = {
   currency: "USD";
   lines: Line[];
   headings?: string[];
+  deliveryZip?: string;
   totalMinor: number;
   canApprove: boolean;
 };
@@ -184,6 +186,157 @@ export class Orders {
       return order;
     });
   }
+  async recommend(
+    id: string,
+    input: Input,
+    locate: (
+      request: Record<string, unknown>,
+    ) => Promise<{
+      items: {
+        source: string;
+        offers: {
+          canCompare?: boolean;
+          packs?: number | null;
+          priceMinor?: number | null;
+          packQuantity?: number | null;
+          packUnit?: string | null;
+          supplier?: string;
+          title?: string;
+          productId?: string;
+          url?: string;
+        }[];
+      }[];
+    }> = research,
+  ) {
+    const zip = postalCode(input.zip);
+    const row = this.db.prepare("SELECT body FROM drafts WHERE id=?").get(id);
+    if (!row) throw new OrderError(404, "draft_not_found");
+    const current: Draft = JSON.parse(String(row.body));
+    if (current.version !== input.version)
+      throw new OrderError(409, "stale_version", current);
+    const updates = new Map<string, Partial<Line>>();
+    for (const group of groupsOf(
+      current.lines.filter((line) => line.status === "needs_review"),
+    )) {
+      let items: { source: string; offers: OfferPick[] }[] = [];
+      try {
+        const found = await locate({
+          text: group.map((line) => line.source).join("\n"),
+          reviewLanguage: current.reviewLanguage,
+          deliveryLocation: zip,
+        });
+        items = found.items;
+      } catch {
+        items = [];
+      }
+      group.forEach((line, index) => {
+        const item = items[index];
+        const offer =
+          item?.source === line.source ? shippedOffer(item.offers) : undefined;
+        updates.set(line.id, offer ? fromOffer(offer) : fromCatalog(line));
+      });
+    }
+    return this.change(id, input.version, (draft, receipt) => {
+      if (receipt) throw new OrderError(409, "draft_finalized", draft);
+      draft.deliveryZip = zip;
+      for (const line of draft.lines) {
+        const update = updates.get(line.id);
+        if (update) Object.assign(line, update);
+      }
+      draft.version++;
+      summarize(draft);
+      this.db
+        .prepare("UPDATE drafts SET body=? WHERE id=?")
+        .run(JSON.stringify(draft), id);
+      return draft;
+    });
+  }
+}
+function postalCode(value: unknown) {
+  if (typeof value !== "string" || !/^\d{5}(?:-\d{4})?$/.test(value.trim()))
+    throw new OrderError(400, "invalid_location");
+  return value.trim();
+}
+function groupsOf(lines: Line[]) {
+  const groups: Line[][] = [];
+  let current: Line[] = [];
+  let chars = 0;
+  for (const line of lines) {
+    const next = chars + line.source.length + 1;
+    if (current.length && (current.length === 8 || next > 1800)) {
+      groups.push(current);
+      current = [];
+      chars = 0;
+    }
+    current.push(line);
+    chars += line.source.length + 1;
+  }
+  if (current.length) groups.push(current);
+  return groups;
+}
+type OfferPick = {
+  canCompare?: boolean;
+  packs?: number | null;
+  priceMinor?: number | null;
+  packQuantity?: number | null;
+  packUnit?: string | null;
+  supplier?: string;
+  title?: string;
+  productId?: string;
+  url?: string;
+};
+function shippedOffer(offers: OfferPick[]) {
+  return offers.find(
+    (offer) =>
+      offer.canCompare &&
+      offer.packs &&
+      offer.priceMinor != null &&
+      offer.packQuantity != null &&
+      offer.packUnit &&
+      offer.supplier &&
+      offer.title &&
+      offer.productId &&
+      offer.url,
+  );
+}
+function fromOffer(offer: NonNullable<ReturnType<typeof shippedOffer>>): Partial<Line> {
+  return {
+    sku: offer.productId!,
+    label: offer.title!,
+    supplier: offer.supplier!,
+    productUrl: offer.url!,
+    packSize: offer.packQuantity!,
+    packUnit: offer.packUnit!,
+    priceMinor: offer.priceMinor!,
+    cases: offer.packs!,
+    status: "ready",
+    reason: null,
+  };
+}
+function fromCatalog(line: Line): Partial<Line> {
+  const quantity = line.requestedQuantity;
+  const cases =
+    line.sku && line.priceMinor != null && line.packSize != null && quantity != null
+      ? line.requestedUnit === "case"
+        ? quantity
+        : line.requestedUnit === line.packUnit
+          ? Math.ceil(quantity / line.packSize)
+          : null
+      : null;
+  if (
+    cases == null ||
+    !Number.isSafeInteger(cases) ||
+    cases < 1 ||
+    cases > 100000
+  )
+    return { status: "skipped", cases: null, reason: null, supplier: null, productUrl: null };
+  return {
+    status: "ready",
+    reason: null,
+    cases,
+    supplier: null,
+    productUrl: null,
+  };
 }
 let local: Orders | undefined;
 export function orders() {

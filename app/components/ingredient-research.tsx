@@ -189,9 +189,9 @@ export function IngredientResearch({
           <p className="small muted">
             {localize(
               language,
-              "Search English storefronts. Offers are informational and are not added to the simulated order.",
-              "Consulta tiendas en inglés. Las ofertas son informativas y no se añaden al pedido simulado.",
-              "查询英文供应商目录。结果仅供参考，不会自动加入模拟订单。",
+              "Search English storefronts. If none match, public product listings are checked. Nothing is added to the simulated order.",
+              "Consulta tiendas en inglés. Si ninguna coincide, se buscan fichas públicas. Nada se añade al pedido simulado.",
+              "查询英文商店；若无匹配，再查看公开商品信息。查询结果不会自动加入模拟订单。",
             )}
           </p>
           <button
@@ -247,18 +247,25 @@ export function IngredientResearch({
                 <ul className="research-offers">
                   {item.offers.map((offer) => (
                     <li key={`${offer.supplier}-${offer.productId}`}>
-                      <strong>{offer.supplier}</strong>
-                      {offer.compatibility === "needs_confirmation" && (
-                        <p className="small">
-                          {localize(
-                            language,
-                            "Confirm this variety suits your recipe.",
-                            "Confirma que esta variedad te sirve.",
-                            "请确认这个品种适合您的食谱。",
-                          )}
-                        </p>
-                      )}
-                      <p>
+                      <div className="research-offer-head">
+                        <span className="status ready">{offer.supplier}</span>
+                        <span className="sku">
+                          {offer.evidenceKind === "web_search"
+                            ? localize(
+                                language,
+                                "Public listing",
+                                "Ficha pública",
+                                "公开商品信息",
+                              )
+                            : localize(
+                                language,
+                                "Storefront",
+                                "Tienda",
+                                "商店",
+                              )}
+                        </span>
+                      </div>
+                      <p className="research-offer-title">
                         <a
                           href={webLink(offer.url)}
                           target="_blank"
@@ -267,46 +274,91 @@ export function IngredientResearch({
                           {offer.title}
                         </a>
                       </p>
-                      <p className="small">
-                        {localize(
-                          language,
-                          "Product size",
-                          "Tamaño del producto",
-                          "包装规格",
-                        )}
-                        :{" "}
-                        {offer.packQuantity !== null &&
-                        offer.packQuantity !== undefined &&
-                        offer.packUnit
-                          ? `${offer.packQuantity} ${unitLabel(offer.packUnit, language)}`
-                          : localize(
+                      {offer.evidenceKind === "web_search" && (
+                        <p className="reason">
+                          {localize(
+                            language,
+                            "Public product listing. Price and delivery are not verified.",
+                            "Ficha pública. El precio y la entrega no están verificados.",
+                            "公开商品信息。价格与配送尚未核实。",
+                          )}
+                        </p>
+                      )}
+                      {offer.compatibility === "needs_confirmation" && (
+                        <p className="reason">
+                          {localize(
+                            language,
+                            "Confirm this variety suits your recipe.",
+                            "Confirma que esta variedad te sirve.",
+                            "请确认这个品种适合您的食谱。",
+                          )}
+                        </p>
+                      )}
+                      <dl className="comparison">
+                        <div>
+                          <dt>
+                            {localize(
                               language,
-                              "unconfirmed",
-                              "sin confirmar",
-                              "待确认",
+                              "Product size",
+                              "Tamaño del producto",
+                              "包装规格",
                             )}
-                      </p>
-                      <p className="small">
-                        {localize(
-                          language,
-                          "Observed price per pack",
-                          "Precio observado por paquete",
-                          "查到的每包价格",
-                        )}
-                        :{" "}
-                        {offer.priceMinor !== null &&
-                        offer.priceMinor !== undefined &&
-                        offer.currency === "USD"
-                          ? money(offer.priceMinor, language)
-                          : localize(
+                          </dt>
+                          <dd>
+                            {offer.packQuantity !== null &&
+                            offer.packQuantity !== undefined &&
+                            offer.packUnit
+                              ? `${offer.packQuantity} ${unitLabel(offer.packUnit, language)}`
+                              : localize(
+                                  language,
+                                  "Unconfirmed",
+                                  "Sin confirmar",
+                                  "待确认",
+                                )}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>
+                            {localize(
                               language,
-                              "unconfirmed in USD",
-                              "sin confirmar en USD",
-                              "美元价格待确认",
+                              "Observed price per pack",
+                              "Precio observado por paquete",
+                              "查到的每包价格",
                             )}
-                      </p>
+                          </dt>
+                          <dd>
+                            {offer.priceMinor !== null &&
+                            offer.priceMinor !== undefined &&
+                            offer.currency === "USD"
+                              ? money(offer.priceMinor, language)
+                              : localize(
+                                  language,
+                                  "Unconfirmed in USD",
+                                  "Sin confirmar en USD",
+                                  "美元价格待确认",
+                                )}
+                          </dd>
+                        </div>
+                        {offer.canCompare && offer.knownCostMinor !== null && (
+                          <div>
+                            <dt>
+                              {offer.packs}{" "}
+                              {localize(language, "packs", "paquetes", "包")}
+                            </dt>
+                            <dd>
+                              {money(offer.knownCostMinor, language)}{" "}
+                              {localize(
+                                language,
+                                "in known costs",
+                                "en costos conocidos",
+                                "已知费用",
+                              )}
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
                       {offer.quantityCompatibility === "unknown" && (
-                        <p className="small">
+                        <p className="small muted">
                           {localize(
                             language,
                             "Recipe coverage is unknown; confirm the unit or conversion.",
@@ -317,31 +369,20 @@ export function IngredientResearch({
                       )}
                       {offer.excess !== null && offer.excess !== undefined && (
                         <p className="small">
-                          {localize(
-                            language,
-                            "Surplus",
-                            "Sobrante",
-                            "多出数量",
-                          )}
-                          : {offer.excess}{" "}
-                          {unitLabel(offer.excessUnit, language)}
-                        </p>
-                      )}
-                      {offer.canCompare && offer.knownCostMinor !== null && (
-                        <p>
-                          {offer.packs}{" "}
-                          {localize(language, "packs", "paquetes", "包")} ·{" "}
-                          {money(offer.knownCostMinor, language)}{" "}
-                          {localize(
-                            language,
-                            "in known costs",
-                            "en costos conocidos",
-                            "已知费用",
-                          )}
+                          <span className="excess">
+                            {localize(
+                              language,
+                              "Surplus",
+                              "Sobrante",
+                              "多出数量",
+                            )}
+                            : {offer.excess}{" "}
+                            {unitLabel(offer.excessUnit, language)}
+                          </span>
                         </p>
                       )}
                       {offer.landedMinor !== null && (
-                        <p>
+                        <p className="purchase-description">
                           {localize(
                             language,
                             "Verified delivered cost",
@@ -351,12 +392,16 @@ export function IngredientResearch({
                           : {money(offer.landedMinor, language)}
                         </p>
                       )}
-                      <ul className="small">
-                        {offer.caveats.map((c) => (
-                          <li key={c}>{c}</li>
-                        ))}
-                      </ul>
-                      <p className="small muted">
+                      {!!offer.caveats.length && (
+                        <ul className="research-caveats">
+                          {offer.caveats.map((c) => (
+                            <li className="reason" key={c}>
+                              {c}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <p className="small muted research-source">
                         <a
                           href={webLink(offer.evidenceUrl)}
                           target="_blank"

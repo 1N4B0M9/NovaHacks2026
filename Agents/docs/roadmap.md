@@ -63,3 +63,10 @@ Photo-first intake follows the frontend owner’s explicit correction on 2026-11
 ## OCR verification · [#30](https://github.com/1N4B0M9/NovaHacks2026/issues/30)
 - [x] Two-pass OCR, page selection, line crops, explicit uncertainty review, and crop retries implemented and tested on the printed demo and disagreement fixtures. [Evidence](updates/issue-30.md).
 - [ ] Compare first-pass and combined exact quantity/unit errors on held-out handwritten notes.
+
+## Public product search · [#26](https://github.com/1N4B0M9/NovaHacks2026/issues/26)
+
+- [x] When storefronts have no compatible offer, return bounded Open Food Facts listings with evidence URLs and no invented price.
+- [x] Keep simulated-order isolation, incompatible-title exclusion, and the existing empty or failed outcome when the index also finds nothing.
+- [x] Record parser tests and one live lookup in [issue-26.md](updates/issue-26.md).
+- [ ] Human review and merge of the issue #26 PR.

@@ -42,3 +42,7 @@ The UI keeps the simulated-order catalog subordinate, never showing its empty su
 ## Chinese test order
 
 The merchant can choose Simplified Chinese review. Every photo goes through local Tesseract OCR and OpenRouter verification. For the printed note “鸡蛋 1 箱” and “燕麦奶 1 箱”, require two ready items and a USD 78 simulated receipt. Preserve OCR output beside the photo; real handwriting accuracy needs separate evaluation.
+
+## Public product search · issue #26
+
+When the checked storefronts have no compatible listing, research may consult the public Open Food Facts product index for the English ingredient name. Show the product title, evidence URL, observation time, and a pack size only when the listing states one. Price, stock, shipping, and delivery eligibility stay unknown. These listings are not a best delivered price and cannot become a simulated-order SKU. A failed or empty index keeps the existing no-result and provider-failure outcomes.
