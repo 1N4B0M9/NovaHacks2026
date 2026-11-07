@@ -1,6 +1,6 @@
 @font-face {
   font-family: "Montserrat";
-  src: url("@fontsource-variable/montserrat/files/montserrat-latin-wght-normal.woff2") format("woff2");
+  src: url("../node_modules/@fontsource-variable/montserrat/files/montserrat-latin-wght-normal.woff2") format("woff2");
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
@@ -8,7 +8,7 @@
 
 @font-face {
   font-family: "Merriweather";
-  src: url("@fontsource-variable/merriweather/files/merriweather-latin-wght-normal.woff2") format("woff2");
+  src: url("../node_modules/@fontsource-variable/merriweather/files/merriweather-latin-wght-normal.woff2") format("woff2");
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
@@ -16,7 +16,7 @@
 
 @font-face {
   font-family: "Ubuntu Mono";
-  src: url("@fontsource/ubuntu-mono/files/ubuntu-mono-latin-400-normal.woff2") format("woff2");
+  src: url("../node_modules/@fontsource/ubuntu-mono/files/ubuntu-mono-latin-400-normal.woff2") format("woff2");
   font-style: normal;
   font-weight: 400;
   font-display: swap;
@@ -1158,6 +1158,7 @@ footer p {
 }
 .summary-card, .receipt {
   box-shadow: var(--surface-shadow);
+}
 .recipe-headings {
   margin: 1.5rem 0;
   padding: 1rem 1.5rem;
