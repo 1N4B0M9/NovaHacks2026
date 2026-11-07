@@ -151,8 +151,8 @@ export function IngredientResearch({
         <>
           <p className="small muted">
             {es
-              ? "Consulta tiendas en inglés. Las ofertas son informativas y no se añaden al pedido simulado."
-              : "Search English storefronts. Offers are informational and are not added to the simulated order."}
+              ? "Consulta tiendas en inglés. Si ninguna coincide, se buscan fichas públicas. Nada se añade al pedido simulado."
+              : "Search English storefronts. If none match, public product listings are checked. Nothing is added to the simulated order."}
           </p>
           <button
             type="button"
@@ -192,6 +192,13 @@ export function IngredientResearch({
                   {item.offers.map((offer) => (
                     <li key={`${offer.supplier}-${offer.productId}`}>
                       <strong>{offer.supplier}</strong>
+                      {offer.evidenceKind === "web_search" && (
+                        <p className="small">
+                          {es
+                            ? "Ficha pública. El precio y la entrega no están verificados."
+                            : "Public product listing. Price and delivery are not verified."}
+                        </p>
+                      )}
                       {offer.compatibility === "needs_confirmation" && (
                         <p className="small">
                           {es

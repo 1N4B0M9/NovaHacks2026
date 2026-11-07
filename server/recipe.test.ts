@@ -56,6 +56,8 @@ test("recipe research keeps whole-line evidence and skips the heading and unreso
   const result = await research(
     { text: recipe, reviewLanguage: "es" },
     async () => [],
+    undefined,
+    async () => [],
   );
   assert.equal(result.items.length, 12);
   assert.equal(result.items[0].status, "heading");

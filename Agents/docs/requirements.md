@@ -38,3 +38,7 @@ Display ingredient identity independently of local catalog availability. Preserv
 The owner authorized candidate discovery for small recipe amounts. Preserve fractional demand separately from whole purchasable packs. Known identities may be browsed while quantity/unit is unresolved; quantity comparison remains unavailable. Present up to five evidence-backed products and up to three interpretation suggestions. Product variants/brands needing confirmation remain labeled; exclude known incompatible forms and ingredient constraints. Show observed pack price and size even without a supported conversion. Do not infer density or count-to-weight conversion.
 
 The UI keeps the simulated-order catalog subordinate, never showing its empty supplier card as a discovery failure. Interpretation selection opens an editable correction that must be saved; source words and version checks remain intact. Block approval during unsaved corrections. Research and external product links never mutate the order.
+
+## Public product search · issue #26
+
+When the checked storefronts have no compatible listing, research may consult the public Open Food Facts product index for the English ingredient name. Show the product title, evidence URL, observation time, and a pack size only when the listing states one. Price, stock, shipping, and delivery eligibility stay unknown. These listings are not a best delivered price and cannot become a simulated-order SKU. A failed or empty index keeps the existing no-result and provider-failure outcomes.

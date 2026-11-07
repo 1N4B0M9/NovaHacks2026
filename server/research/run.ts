@@ -10,16 +10,23 @@ import {
 } from "./ingredient";
 import { rank, type Offer } from "./rank";
 import { searchStore, suppliers } from "./storefront";
+import { searchWeb } from "./web";
 
 type Search = (
   item: ResearchIngredient,
   store: (typeof suppliers)[number],
   signal: AbortSignal,
 ) => Promise<Offer[]>;
+type WebSearch = (
+  item: ResearchIngredient,
+  signal: AbortSignal,
+) => Promise<Offer[]>;
 const copy = {
   en: {
     review: "Correct the ingredient, quantity or unit before searching.",
-    empty: "No matching listing found among the stores checked.",
+    empty:
+      "No matching listing found in the checked stores or the public product index.",
+    web: "Public product listings were found. They are not a store price or a delivery promise.",
     failed: "Supplier research failed.",
     timeout: "Supplier research timed out.",
     partial: "Some suppliers could not be checked.",
@@ -28,11 +35,13 @@ const copy = {
     best: "Lowest verified delivered cost among the checked offers.",
     incomplete: "Listings found, but none has a comparable purchasable cost.",
     coverage:
-      "Only the listed US storefronts were searched. Destination eligibility and final costs require supplier confirmation.",
+      "Checked US storefronts. If none have a compatible listing, a public product index is searched. Destination eligibility and final costs require supplier confirmation.",
   },
   es: {
     review: "Corrige el ingrediente, la cantidad o la unidad antes de buscar.",
-    empty: "No se encontró una oferta coincidente en las tiendas consultadas.",
+    empty:
+      "No se encontró una oferta coincidente en las tiendas ni en el índice público de productos.",
+    web: "Hay fichas públicas de productos. No son un precio de tienda ni una promesa de entrega.",
     failed: "La búsqueda en proveedores falló.",
     timeout: "Se agotó el tiempo de búsqueda.",
     partial: "No se pudieron consultar todos los proveedores.",
@@ -42,13 +51,14 @@ const copy = {
     incomplete:
       "Hay resultados, pero ninguno tiene un costo de compra comparable.",
     coverage:
-      "Solo se consultaron las tiendas estadounidenses indicadas. Confirma la entrega y el costo final con el proveedor.",
+      "Se consultaron tiendas estadounidenses. Si ninguna tiene una oferta compatible, se busca un índice público de productos. Confirma la entrega y el costo final con el proveedor.",
   },
 };
 export async function research(
   input: Record<string, unknown>,
   search: Search = searchStore,
   timeoutMs = 6500,
+  findOnWeb: WebSearch = searchWeb,
 ) {
   if (input.reviewLanguage !== "en" && input.reviewLanguage !== "es")
     throw new OrderError(400, "invalid_language");
@@ -159,33 +169,55 @@ export async function research(
         }
       }),
     );
-    const stores = observed.map(({ supplier, status }) => ({
-      supplier,
-      status,
-    }));
-    const ranked = rank(
-      item,
-      observed.flatMap((x) => x.offers),
-      language,
-    );
-    const successes = stores.filter((x) => x.status === "ok").length;
-    const status =
-      successes === 0
-        ? stores.every((x) => x.status === "timeout")
-          ? "timeout"
-          : "failed"
-        : successes !== stores.length
-          ? "partial"
-          : ranked.offers.length
-            ? "completed"
+    const storeOffers = observed.flatMap((x) => x.offers);
+    let webStatus: "ok" | "failed" | "timeout" | "skipped" = "skipped";
+    let webOffers: Offer[] = [];
+    if (!rank(item, storeOffers, language).offers.length) {
+      const webSignal = AbortSignal.timeout(Math.min(4000, timeoutMs));
+      try {
+        webOffers = await findOnWeb(item, webSignal);
+        webStatus = "ok";
+      } catch {
+        webStatus = webSignal.aborted ? "timeout" : "failed";
+      }
+    }
+    const stores = [
+      ...observed.map(({ supplier, status }) => ({ supplier, status })),
+      ...(webStatus === "skipped"
+        ? []
+        : [
+            {
+              supplier: "Open Food Facts",
+              status: webStatus === "ok" ? ("ok" as const) : webStatus,
+            },
+          ]),
+    ];
+    const ranked = rank(item, [...storeOffers, ...webOffers], language);
+    const storeStatuses = observed.map((x) => x.status);
+    const webProblem = webStatus === "failed" || webStatus === "timeout";
+    const status = ranked.offers.length
+      ? storeStatuses.some((x) => x !== "ok") || webProblem
+        ? "partial"
+        : "completed"
+      : storeStatuses.every((x) => x === "timeout")
+        ? "timeout"
+        : storeStatuses.every((x) => x !== "ok")
+          ? "failed"
+          : webProblem
+            ? "partial"
             : "no_results";
-    const summary = ranked.bestComparableUrl
-      ? t.best
-      : ranked.lowestProvisionalUrl
-        ? t.provisional
-        : ranked.offers.length
-          ? t.incomplete
-          : t.empty;
+    const webOnly =
+      ranked.offers.length > 0 &&
+      ranked.offers.every((offer) => offer.evidenceKind === "web_search");
+    const summary = webOnly
+      ? t.web
+      : ranked.bestComparableUrl
+        ? t.best
+        : ranked.lowestProvisionalUrl
+          ? t.provisional
+          : ranked.offers.length
+            ? t.incomplete
+            : t.empty;
     let message =
       status === "failed"
         ? t.failed

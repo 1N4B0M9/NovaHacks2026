@@ -42,6 +42,9 @@ const tokens = (text: string) =>
           beans: "bean",
           chickpeas: "chickpea",
           cubes: "cube",
+          chilies: "chili",
+          chiles: "chili",
+          chillies: "chili",
         })[w] ?? w,
     ) ?? [];
 const packaging = new Set(
@@ -50,7 +53,7 @@ const packaging = new Set(
   ),
 );
 const forms =
-  "powder powdered flour soup sauce juice tea fried canned dried sundried dehydrated frozen roasted cooked pickled puree paste ketchup granulated granules flakes seasoning seed seeds supplement mix chocolate flavored sweetened concentrate chips cracker crackers rings".split(
+  "powder powdered flour starch bread soup sauce salsa juice tea fried canned dried sundried dehydrated frozen roasted cooked pickled puree paste ketchup granulated granules flakes seasoning seed seeds supplement mix chocolate flavored sweetened concentrate chips cracker crackers baguette baguettes rings".split(
     " ",
   );
 export function assessTitle(query: string, title: string) {

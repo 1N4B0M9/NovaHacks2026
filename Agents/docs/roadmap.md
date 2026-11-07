@@ -55,3 +55,10 @@ Photo-first intake follows the frontend owner’s explicit correction on 2026-11
 - [x] Add selectable interpretation corrections, subordinate catalog status, and block approval during unsaved edits.
 - [x] Add backend and mobile browser regressions using mocked OCR; record live discovery separately in [issue-20.md](updates/issue-20.md).
 - [ ] Lead review and human merge of the issue #20 PR.
+
+## Public product search · [#26](https://github.com/1N4B0M9/NovaHacks2026/issues/26)
+
+- [x] When storefronts have no compatible offer, return bounded Open Food Facts listings with evidence URLs and no invented price.
+- [x] Keep simulated-order isolation, incompatible-title exclusion, and the existing empty or failed outcome when the index also finds nothing.
+- [x] Record parser tests and one live lookup in [issue-26.md](updates/issue-26.md).
+- [ ] Human review and merge of the issue #26 PR.
