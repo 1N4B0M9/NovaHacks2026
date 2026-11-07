@@ -1,6 +1,7 @@
 import type { Language } from "./order-types";
 export const copy = {
   zh: {
+    priceAtStore: "价格请见商店页面",
     zip: "美国邮政编码",
     zipHint: "配送按此邮编估算。",
     shipsTo: "配送至",

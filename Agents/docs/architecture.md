@@ -55,7 +55,7 @@ Client research cards show possible products, observed per-pack price/size, comp
 Tesseract.js is the local first pass for every scan. A bounded child process returns the reading and line locations to the server. OpenRouter verifies them against the same image.
 
 ## Two-pass read and review
-Local Tesseract returns transcript, line boxes and confidence before the configured OpenRouter model checks the same photo with the transcript as evidence. A bounded line alignment preserves additions and omissions. Client-side cropping keeps the full original for review and sends only the selection when crop-before-read is enabled. Uncertain rows require explicit correction or omission; an optional single-line reread shows both results. See [issue #30](updates/issue-30.md).
+Local Tesseract returns transcript, line boxes and confidence before the configured OpenRouter model checks the same photo with the transcript as evidence. A bounded line alignment preserves additions and omissions. Client-side cropping keeps the full original for review and sends only the selection when crop-before-read is enabled. The client shows the merged transcript as one editable ingredient list. Engine disagreements stay internal. The merchant reviews, edits or removes ingredients before submitting the list to the cart. See [issue #30](updates/issue-30.md).
 
 ## Public product index · issue #26
 

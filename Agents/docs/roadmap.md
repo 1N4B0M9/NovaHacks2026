@@ -70,3 +70,6 @@ Photo-first intake follows the frontend owner’s explicit correction on 2026-11
 - [x] Keep simulated-order isolation, incompatible-title exclusion, and the existing empty or failed outcome when the index also finds nothing.
 - [x] Record parser tests and one live lookup in [issue-26.md](updates/issue-26.md).
 - [ ] Human review and merge of the issue #26 PR.
+
+## Presentation UI · [#34](https://github.com/1N4B0M9/NovaHacks2026/issues/34)
+- [x] Localized torn order slip, one editable parsed list, and a bounded cart with a separate order total. [Verification](updates/issue-34.md).

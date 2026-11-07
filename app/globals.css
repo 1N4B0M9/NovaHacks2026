@@ -433,76 +433,6 @@ select {
   text-align: center;
   margin-top: 15px;
 }
-.illustration {
-  position: relative;
-  height: 255px;
-  max-width: 365px;
-  margin: 34px 0 0 15px;
-}
-.paper {
-  position: absolute;
-  width: 250px;
-  height: 185px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-}
-.paper-back {
-  background: var(--chart-3);
-  transform: rotate(-9deg);
-  top: 24px;
-  left: 4px;
-}
-.paper-front {
-  background: var(--card);
-  transform: rotate(4deg);
-  top: 12px;
-  left: 30px;
-  padding: 23px;
-  box-shadow: var(--surface-shadow);
-}
-.paper-title {
-  font-size: 9px;
-  letter-spacing: 1.6px;
-  color: var(--muted-foreground);
-}
-.paper-line {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  font-family: var(--font-serif);
-  font-size: 20px;
-  padding: 11px 0 7px;
-}
-.paper-line span {
-  color: var(--secondary-foreground);
-  font-family: var(--font-sans);
-  font-size: 15px;
-}
-.paper-line.light {
-  font-size: 12px;
-  color: var(--muted-foreground);
-  border: 0;
-}
-.paper-stamp {
-  font-size: 7px;
-  letter-spacing: 1px;
-  color: var(--secondary-foreground);
-  border: 1px solid var(--border);
-  position: absolute;
-  bottom: 14px;
-  right: -27px;
-  transform: rotate(-15deg);
-  padding: 9px;
-  background: var(--secondary);
-  border-radius: 4px;
-}
-.illustration-label {
-  position: absolute;
-  bottom: 6px;
-  left: 27px;
-  font-size: 11px;
-  color: var(--muted-foreground);
-}
 .review-heading {
   display: flex;
   align-items: center;
@@ -956,9 +886,7 @@ footer p {
     font-size: 14px;
     margin-top: 17px;
   }
-  .illustration {
-    display: none;
-  }
+
   .intake-card {
     padding: 25px 22px;
     border-radius: var(--radius);
@@ -1040,14 +968,11 @@ footer p {
   margin-top: 5px;
 }
 .crop-option { display: flex; align-items: center; gap: .5rem; margin-bottom: 1rem; }
-.note-crop, .ocr-review { margin-block: 1rem; }
+.note-crop { margin-block: 1rem; }
 .crop-surface { position: relative; overflow: hidden; touch-action: none; cursor: crosshair; margin-block: .6rem; }
 .crop-surface img { display: block; width: 100%; user-select: none; }
 .crop-surface span { position: absolute; border: 2px solid currentColor; box-shadow: 0 0 0 100vmax rgb(0 0 0 / .48); pointer-events: none; }
 .note-crop details label { display: flex; gap: .75rem; align-items: center; }
-.ocr-line { min-width: 0; margin: .8rem 0; padding: .8rem; border: 1px solid currentColor; border-radius: var(--radius); }
-.ocr-line p { overflow-wrap: anywhere; }
-.ocr-strip { display: block; max-width: 100%; max-height: 7rem; margin-bottom: .5rem; }
 .scan-placeholder {
   border: 1px dashed var(--border);
   border-radius: var(--radius);
@@ -1149,9 +1074,7 @@ footer p {
   border-radius: var(--radius);
   margin-bottom: 14px;
 }
-.paper-line {
-  font-size: 15px;
-}
+
 .error-banner:focus {
   outline: 2px solid var(--ring);
   outline-offset: 3px;
@@ -1285,3 +1208,78 @@ footer p {
     grid-template-columns: 1fr 1fr;
   }
 }
+/* The order slip shares the pitch deck's serrated paper edge. */
+.locale-switch select{width:auto;margin:0;background:var(--card);padding:.5rem 1rem;}
+.topbar{height:72px;}
+.steps{padding:24px 0 36px;}
+.intake-layout{align-items:center;gap:clamp(30px,6vw,90px);padding-block:16px 40px;}
+.intro h1{font-size:clamp(46px,6vw,84px);letter-spacing:-.038em;line-height:1.05;text-wrap:balance;}
+.ticket-scene{margin:42px 12px 12px 3px;max-width:390px;padding:8px 6px 12px;}
+.ticket-shadow{transform:rotate(-3deg);filter:drop-shadow(3px 8px 5px rgb(64 39 32 / .15));}
+.order-ticket{position:relative;background:#fff4db;color:#3d3436;padding:24px 30px 25px;}
+.order-ticket::after{position:absolute;content:"";height:10px;inset:100% 0 auto;background:linear-gradient(135deg,#fff4db 25%,transparent 25%) -8px 0,linear-gradient(225deg,#fff4db 25%,transparent 25%) -8px 0;background-size:16px 16px;}
+.order-ticket figcaption,.ticket-foot{display:flex;justify-content:space-between;align-items:center;}
+.order-ticket figcaption{font:17px var(--font-mono);padding-bottom:16px;border-bottom:1px dashed #ae9683;}
+.ticket-clip{position:absolute;top:-12px;right:22px;width:9px;height:32px;border:2px solid #8d7d70;border-radius:8px;transform:rotate(8deg);}
+.order-ticket li{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #deccae;font:italic 25px var(--font-serif);}
+.order-ticket strong{font:16px var(--font-mono);white-space:nowrap;}
+.ticket-foot{margin-top:15px;font:14px var(--font-mono);}
+.ticket-foot b{color:#9d4534;font:700 17px var(--font-sans);}
+.intake-card{padding:clamp(24px,3vw,42px);}
+.intake-card > h2{margin-bottom:24px;}
+.scan-settings{display:grid;grid-template-columns:1fr 1.5fr;gap:16px;}
+.scan-settings input,.scan-settings select{width:100%;margin:0;height:46px;}
+.crop-option{margin-block:15px;}
+.photo-actions{display:grid;grid-template-columns:1fr 1fr;}
+.photo-actions .button svg,.remove-line svg{width:19px;height:19px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.photo-original,.summary-note{margin-block:14px;}
+.photo-original img,.summary-note img{display:block;width:auto;max-width:100%;max-height:220px;margin:12px auto;object-fit:contain;}
+summary{cursor:pointer;font-size:14px;}
+.parsed-title{display:flex;align-items:baseline;justify-content:space-between;}
+.parsed-title h2{margin:0;font-size:24px;}
+.parsed-title>span,.cart-count{font:14px var(--font-mono);color:var(--muted-foreground);}
+.parsed-rows,.cart-scroll,.receipt-lines{max-height:min(44vh,380px);overflow-y:auto;overscroll-behavior-y:contain;scrollbar-width:thin;scrollbar-color:var(--chart-5) transparent;}
+.parsed-rows{margin-top:14px;}
+.parsed-row{display:grid;grid-template-columns:24px minmax(0,1fr) 36px;align-items:center;border-bottom:1px solid var(--border);gap:4px;}
+.parsed-row>span{font:12px var(--font-mono);color:var(--muted-foreground);}
+.parsed-row input{border:0;border-radius:0;background:transparent;width:100%;padding:12px 4px;color:var(--foreground);}
+.remove-line{width:36px;height:40px;display:grid;place-items:center;background:none;color:var(--muted-foreground);border:none;}
+.add-line{margin-block:6px;}
+.review-layout{align-items:start;}
+.cart-scroll{display:block;max-height:min(60vh,560px);border-block:1px solid var(--border);padding-inline:4px 12px;}
+.cart-item{padding:16px 0;border-bottom:1px solid var(--border);min-width:0;overflow-wrap:anywhere;}
+.cart-item:last-child{border:0;}
+.cart-item .line-heading{margin:4px 0;align-items:baseline;gap:12px;}
+.cart-item h3{font:500 20px var(--font-serif);}
+.cart-item .line-heading strong{font-variant-numeric:tabular-nums;white-space:nowrap;}
+.cart-source{font:14px var(--font-mono);color:var(--muted-foreground);}
+.cart-item .purchase-description{color:var(--muted-foreground);}
+.summary-note>p{white-space:pre-wrap;overflow-wrap:anywhere;}
+.summary-note[open]>p{max-height:10rem;overflow:auto;}
+.footer-brand{font:600 18px var(--font-serif);}
+@media(max-width:680px){
+ .topbar{height:60px;}
+ .steps{padding:16px 0 22px;}
+ .intake-layout{padding-block:0 14px;gap:22px;}
+ .intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(145px,1fr);align-items:center;gap:12px;}
+ .intro h1{font-size:clamp(34px,8vw,46px);}
+ .ticket-scene{margin:4px 5px 10px 0;padding:0;}
+ .order-ticket{padding:10px 12px;}
+ .order-ticket figcaption{font-size:12px;padding-bottom:6px;}
+ .order-ticket li{font-size:15px;padding:6px 0;}
+ .order-ticket strong,.ticket-foot{font-size:11px;}
+ .ticket-clip{height:20px;width:6px;top:-7px;right:10px;}
+ .ticket-foot{margin-top:6px;}
+ .ticket-foot b{font-size:13px;}
+ .cart-scroll{max-height:min(45vh,370px);}
+ .receipt-lines{max-height:40vh;}
+}
+@media(max-width:350px){.photo-actions{grid-template-columns:1fr;}.steps{gap:12px;}}
+.intake-controls > summary { font: 29px var(--font-serif); margin-bottom: 20px; list-style:none; }
+.intake-controls > summary::-webkit-details-marker {display:none;}
+.confirming {display:block;max-width:720px;margin:0 auto;}
+.confirming .intake-controls > summary {font:14px var(--font-sans);list-style:revert;margin:0;}
+.confirming .intake-controls[open] > summary {margin-bottom:16px;}
+.confirming .parsed-title h1 {font-size:clamp(28px,4vw,42px);letter-spacing:-.035em;white-space:normal;}
+.confirming .extracted-note {margin-top:18px;padding-top:18px;}
+.confirming .parsed-rows {max-height: min(48vh,430px);}
