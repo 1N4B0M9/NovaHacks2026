@@ -191,22 +191,19 @@ export function IngredientResearch({
                 <ul className="research-offers">
                   {item.offers.map((offer) => (
                     <li key={`${offer.supplier}-${offer.productId}`}>
-                      <strong>{offer.supplier}</strong>
-                      {offer.evidenceKind === "web_search" && (
-                        <p className="small">
-                          {es
-                            ? "Ficha pública. El precio y la entrega no están verificados."
-                            : "Public product listing. Price and delivery are not verified."}
-                        </p>
-                      )}
-                      {offer.compatibility === "needs_confirmation" && (
-                        <p className="small">
-                          {es
-                            ? "Confirma que esta variedad te sirve."
-                            : "Confirm this variety suits your recipe."}
-                        </p>
-                      )}
-                      <p>
+                      <div className="research-offer-head">
+                        <span className="status ready">{offer.supplier}</span>
+                        <span className="sku">
+                          {offer.evidenceKind === "web_search"
+                            ? es
+                              ? "Ficha pública"
+                              : "Public listing"
+                            : es
+                              ? "Tienda"
+                              : "Storefront"}
+                        </span>
+                      </div>
+                      <p className="research-offer-title">
                         <a
                           href={webLink(offer.url)}
                           target="_blank"
@@ -215,31 +212,63 @@ export function IngredientResearch({
                           {offer.title}
                         </a>
                       </p>
-                      <p className="small">
-                        {es ? "Tamaño del producto" : "Product size"}:{" "}
-                        {offer.packQuantity !== null &&
-                        offer.packQuantity !== undefined &&
-                        offer.packUnit
-                          ? `${offer.packQuantity} ${unitLabel(offer.packUnit, language)}`
-                          : es
-                            ? "sin confirmar"
-                            : "unconfirmed"}
-                      </p>
-                      <p className="small">
-                        {es
-                          ? "Precio observado por paquete"
-                          : "Observed price per pack"}
-                        :{" "}
-                        {offer.priceMinor !== null &&
-                        offer.priceMinor !== undefined &&
-                        offer.currency === "USD"
-                          ? money(offer.priceMinor, language)
-                          : es
-                            ? "sin confirmar en USD"
-                            : "unconfirmed in USD"}
-                      </p>
+                      {offer.evidenceKind === "web_search" && (
+                        <p className="reason">
+                          {es
+                            ? "Ficha pública. El precio y la entrega no están verificados."
+                            : "Public product listing. Price and delivery are not verified."}
+                        </p>
+                      )}
+                      {offer.compatibility === "needs_confirmation" && (
+                        <p className="reason">
+                          {es
+                            ? "Confirma que esta variedad te sirve."
+                            : "Confirm this variety suits your recipe."}
+                        </p>
+                      )}
+                      <dl className="comparison">
+                        <div>
+                          <dt>{es ? "Tamaño del producto" : "Product size"}</dt>
+                          <dd>
+                            {offer.packQuantity !== null &&
+                            offer.packQuantity !== undefined &&
+                            offer.packUnit
+                              ? `${offer.packQuantity} ${unitLabel(offer.packUnit, language)}`
+                              : es
+                                ? "Sin confirmar"
+                                : "Unconfirmed"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>
+                            {es
+                              ? "Precio observado por paquete"
+                              : "Observed price per pack"}
+                          </dt>
+                          <dd>
+                            {offer.priceMinor !== null &&
+                            offer.priceMinor !== undefined &&
+                            offer.currency === "USD"
+                              ? money(offer.priceMinor, language)
+                              : es
+                                ? "Sin confirmar en USD"
+                                : "Unconfirmed in USD"}
+                          </dd>
+                        </div>
+                        {offer.canCompare && offer.knownCostMinor !== null && (
+                          <div>
+                            <dt>
+                              {offer.packs} {es ? "paquetes" : "packs"}
+                            </dt>
+                            <dd>
+                              {money(offer.knownCostMinor, language)}{" "}
+                              {es ? "en costos conocidos" : "in known costs"}
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
                       {offer.quantityCompatibility === "unknown" && (
-                        <p className="small">
+                        <p className="small muted">
                           {es
                             ? "No podemos calcular cuánto cubre tu receta; confirma la unidad o conversión."
                             : "Recipe coverage is unknown; confirm the unit or conversion."}
@@ -247,31 +276,30 @@ export function IngredientResearch({
                       )}
                       {offer.excess !== null && offer.excess !== undefined && (
                         <p className="small">
-                          {es ? "Sobrante" : "Surplus"}: {offer.excess}{" "}
-                          {unitLabel(offer.excessUnit, language)}
-                        </p>
-                      )}
-                      {offer.canCompare && offer.knownCostMinor !== null && (
-                        <p>
-                          {offer.packs} {es ? "paquetes" : "packs"} ·{" "}
-                          {money(offer.knownCostMinor, language)}{" "}
-                          {es ? "en costos conocidos" : "in known costs"}
+                          <span className="excess">
+                            {es ? "Sobrante" : "Surplus"}: {offer.excess}{" "}
+                            {unitLabel(offer.excessUnit, language)}
+                          </span>
                         </p>
                       )}
                       {offer.landedMinor !== null && (
-                        <p>
+                        <p className="purchase-description">
                           {es
                             ? "Costo total verificado"
                             : "Verified delivered cost"}
                           : {money(offer.landedMinor, language)}
                         </p>
                       )}
-                      <ul className="small">
-                        {offer.caveats.map((c) => (
-                          <li key={c}>{c}</li>
-                        ))}
-                      </ul>
-                      <p className="small muted">
+                      {!!offer.caveats.length && (
+                        <ul className="research-caveats">
+                          {offer.caveats.map((c) => (
+                            <li className="reason" key={c}>
+                              {c}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <p className="small muted research-source">
                         <a
                           href={webLink(offer.evidenceUrl)}
                           target="_blank"

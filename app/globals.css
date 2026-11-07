@@ -1160,41 +1160,114 @@ footer p {
   box-shadow: var(--surface-shadow);
 }
 .recipe-headings {
-  margin: 1.5rem 0;
-  padding: 1rem 1.5rem;
-  border-left: 3px solid var(--green, #305846);
+  margin: 0 0 28px;
+  padding: 18px 20px;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius);
 }
 .ingredient-research {
-  margin: 1rem 0;
-  padding: 1rem;
-  background: #f1f5ed;
-  border-radius: 12px;
+  margin: 18px 0 0;
+  padding: 18px;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   overflow-wrap: anywhere;
 }
-.ingredient-research h3 {
-  margin: 0.35rem 0;
+.ingredient-research h3,
+.ingredient-research h4 {
+  margin: 4px 0 8px;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.4px;
+  line-height: 1.3;
 }
 .ingredient-research p {
-  margin: 0.65rem 0;
+  margin: 8px 0;
 }
 .research-results {
-  margin-top: 1rem;
-  border-top: 1px solid #cdd7cb;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
 }
 .research-message {
-  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--secondary-foreground);
 }
 .research-offers {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 12px 0 4px;
   padding: 0;
   list-style: none;
 }
 .research-offers > li {
-  margin: 1rem 0;
-  padding: 1rem;
-  background: white;
-  border-radius: 8px;
+  margin: 0;
+  padding: 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--surface-shadow);
 }
-.research-offers a {
+.research-offer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.research-offer-title {
+  margin: 0 0 12px;
+  font-family: var(--font-serif);
+  font-size: 18px;
+  line-height: 1.4;
+}
+.research-offer-title a {
+  color: var(--foreground);
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+.research-offers .comparison {
+  margin: 14px 0 4px;
+}
+.research-offers .reason {
+  margin: 10px 0;
+}
+.research-caveats {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.research-caveats li + li {
+  margin-top: 6px;
+}
+.research-source {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.research-source a {
+  color: var(--secondary-foreground);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.research-offers + details,
+.research-results details {
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+}
+.research-results details summary {
+  cursor: pointer;
+  color: var(--secondary-foreground);
+}
+@media (max-width: 850px) {
+  .research-offers .comparison {
+    grid-template-columns: 1fr 1fr;
+  }
 }
