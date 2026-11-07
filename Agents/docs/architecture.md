@@ -6,7 +6,7 @@
 
 Selected stack: one TypeScript Next.js app with a mobile browser UI and server routes, a small checked-in JSON catalog, and SQLite for drafts and the simulated outbox on one local demo host. A local presentation avoids a dependency on deployment credentials. The lead owns the root package and app/api. The partner owns the page, layout, styles and UI components.
 
-1. The browser accepts a photo or pasted text plus an explicit review language. Show the original locally. Use human-reviewed UI strings for the selected demo languages.
+1. The browser takes a camera image or photo upload and an explicit review language. Transcribe the note into editable text and retain the photo for comparison. When transcription fails, allow manual transcription of the pictured note. Use human-reviewed UI strings for the selected demo languages.
 2. A server-side extraction adapter returns source text, candidate item, quantity and unit per line. An optional vision/language model receives only the submitted content using an application credential. If unavailable, accept typed text and use the curated bilingual aliases and units for the demo.
 3. The order service resolves aliases to catalog SKUs. It calculates pack conversions and totals using catalog data and integer currency amounts. Uncertain readings, missing units, ambiguous catalog matches and pack mismatches require review. Never let model output determine price or authorize a purchase.
 4. The browser renders the supplier label and the merchant's words together with localized explanations. Merchant edits trigger server-side validation. The approval transaction rechecks all lines, requires a nonempty order and stores one immutable supplier preview per draft. Duplicate approval returns that same order.
@@ -24,4 +24,4 @@ Check the expected draft version transactionally on edits and approval. Invalida
 | 210–300 min | Run ambiguity, empty order, error and repeat approval checks | Try an unfamiliar note, review translation and rehearse fallback |
 | 300–360 min | Fix integration defects and freeze demo data | Rehearse five-minute presentation and prepare submission |
 
-After owner approval, create separate build issues for catalog and order service, merchant review UI, extraction adapter, and integration/demo verification. Both owners share the contract before parallel work. Integration follows the first two components; photo intake can be cut if the text flow demonstrates the full purchasing decision.
+Backend and frontend work share the contract on issue #3. Integration on issue #5 includes a provider-backed handwriting check as well as the manual failure fallback.

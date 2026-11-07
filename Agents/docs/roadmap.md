@@ -23,7 +23,8 @@ Photo-first intake follows the frontend owner’s explicit correction on 2026-11
 
 ## Integration and release · lead + partner · [#5](https://github.com/1N4B0M9/NovaHacks2026/issues/5)
 
-- [ ] Review the frontend PR at its latest revision and verify both branches together.
+- [x] Reviewed frontend a6d3702 with backend 24ee7f8 on an isolated production build. Passed 11 backend, 15 fixture browser and 9 real-backend browser checks. All 8 live photo calls exercised manual fallback.
+- [ ] Re-review the fix for approval during an unsaved line correction. [Reproduction and requested test](https://github.com/1N4B0M9/NovaHacks2026/pull/9#issuecomment-6711096356).
 - [ ] Run the five-minute demo rehearsal, including unfamiliar input, fallback and one simulated receipt. Obtain fluent review or identify Spanish fixtures as illustrative.
 - [ ] Record human merge status and the revision used for the demo.
 
