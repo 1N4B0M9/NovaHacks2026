@@ -34,7 +34,7 @@ Photo-first intake follows the frontend owner’s explicit correction on 2026-11
 - [x] Normalize confirmed English/Spanish ingredient lines, hold ambiguities, and research public English storefronts with bounded workers.
 - [x] Return timestamped supplier evidence, localized caveats, total required pack cost, alternatives and separate provisional vs verified landed-cost rankings.
 - [x] Exercise fixture failures/timeouts and a real Spanish HTTP walkthrough. See [evidence](updates/issue-10.md).
-- [ ] Partner may integrate research UI using the additive contract. Human review/merge remains pending.
+- [x] Partner integrated per-line supplier research, recognized/clarification/no-catalog states and preserved headings on `codex/fix-recipe-matching`, based on PR #16. Browser and API evidence: [frontend recipe report](updates/issue-14-frontend.md). Human review/merge remains pending.
 
 ## Multilingual ingredient matching · backend lead · [#11](https://github.com/1N4B0M9/NovaHacks2026/issues/11)
 

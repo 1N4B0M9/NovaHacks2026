@@ -51,7 +51,7 @@ async function makePhoto(text) {
   await notePage.close();
   return buffer;
 }
-if (!live)
+if (!live || process.env.MOCK_OCR === "1")
   await page.route("**/api/transcribe", async (route) => {
     const input = route.request().postDataJSON();
     assert.match(input.image, /^data:image\/jpeg;base64,/);

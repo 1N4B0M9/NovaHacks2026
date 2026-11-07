@@ -383,6 +383,18 @@ export default function Home() {
                 {t.editList}
               </button>
             </div>
+            {!!draft.headings?.length && (
+              <div className="recipe-headings">
+                <p className="field-label">
+                  {language === "es"
+                    ? "Título de la receta · No se compra"
+                    : "Recipe heading · Not a purchase item"}
+                </p>
+                {draft.headings.map((title, index) => (
+                  <p key={index}>{title}</p>
+                ))}
+              </div>
+            )}
             <div className="review-layout">
               <div className="line-list" aria-busy={!!pending}>
                 {draft.lines.map((line) => (

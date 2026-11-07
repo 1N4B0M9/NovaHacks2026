@@ -1045,3 +1045,43 @@ footer p {
     animation: none;
   }
 }
+
+.recipe-headings {
+  margin: 1.5rem 0;
+  padding: 1rem 1.5rem;
+  border-left: 3px solid var(--green, #305846);
+}
+.ingredient-research {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #f1f5ed;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+.ingredient-research h3 {
+  margin: 0.35rem 0;
+}
+.ingredient-research p {
+  margin: 0.65rem 0;
+}
+.research-results {
+  margin-top: 1rem;
+  border-top: 1px solid #cdd7cb;
+}
+.research-message {
+  font-weight: 600;
+}
+.research-offers {
+  padding: 0;
+  list-style: none;
+}
+.research-offers > li {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+}
+.research-offers a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
