@@ -7,6 +7,7 @@ import {
   type LineAction,
 } from "./order-types";
 import type { Copy } from "./copy";
+import { unitLabel } from "./copy";
 
 export function ReviewLine({
   line,
@@ -26,13 +27,11 @@ export function ReviewLine({
   const [cases, setCases] = useState(String(line.cases ?? 1));
   const count = Number(cases);
   const validCases =
-    /^\d+$/.test(cases) && Number.isSafeInteger(count) && count > 0;
-  const unit = (value: string | null) =>
-    value === "each"
-      ? t.each
-      : value === "cartons" || value === "carton"
-        ? t.cartons
-        : (value ?? "");
+    /^\d+$/.test(cases) &&
+    Number.isSafeInteger(count) &&
+    count > 0 &&
+    count <= 100000;
+  const unit = (value: string | null) => unitLabel(value, language);
   const comparable =
     line.requestedUnit === line.packUnit &&
     line.requestedQuantity !== null &&
@@ -139,7 +138,7 @@ export function ReviewLine({
             disabled={disabled}
             rows={2}
             required
-            maxLength={1000}
+            maxLength={500}
           />
           <div className="button-row">
             <button
@@ -164,6 +163,7 @@ export function ReviewLine({
       ) : (
         <>
           {line.status === "needs_review" &&
+            line.reason === "pack_mismatch" &&
             line.sku !== null &&
             line.packSize !== null &&
             line.priceMinor !== null && (
@@ -175,6 +175,7 @@ export function ReviewLine({
                     type="number"
                     inputMode="numeric"
                     min="1"
+                    max="100000"
                     step="1"
                     value={cases}
                     onChange={(event) => setCases(event.target.value)}

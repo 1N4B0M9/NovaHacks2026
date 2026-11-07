@@ -21,10 +21,52 @@ const context = await browser.newContext({
 const page = await context.newPage();
 const pageErrors = [];
 page.on("pageerror", (error) => pageErrors.push(error.message));
+page.on("console", (message) => {
+  if (
+    message.type() === "error" &&
+    /hydration|hydrated|uncaught/i.test(message.text())
+  )
+    pageErrors.push(message.text());
+});
 let draft,
   order,
   requests = [],
   failNext = null;
+let nextTranscription = "2 doz eggs, 1 case oat milk";
+let scanFailure = false;
+let successfulScans = 0,
+  fallbackScans = 0;
+async function makePhoto(text) {
+  const notePage = await context.newPage();
+  await notePage.setContent(
+    '<div style="background:#ffffed;width:520px;padding:40px;font:28px cursive;line-height:2;color:#21352b;white-space:pre-line"></div>',
+  );
+  await notePage.locator("div").evaluate(
+    (element, value) => {
+      element.textContent = value;
+    },
+    text.replaceAll(", ", "\n"),
+  );
+  const buffer = await notePage.locator("div").screenshot({ caret: "initial" });
+  await notePage.close();
+  return buffer;
+}
+if (!live)
+  await page.route("**/api/transcribe", async (route) => {
+    const input = route.request().postDataJSON();
+    assert.match(input.image, /^data:image\/jpeg;base64,/);
+    assert.ok(input.image.length <= 4000000);
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await route.fulfill({
+      status: scanFailure ? 503 : 200,
+      contentType: "application/json",
+      body: JSON.stringify(
+        scanFailure
+          ? { error: "transcription_unavailable" }
+          : { text: nextTranscription },
+      ),
+    });
+  });
 if (!live)
   await page.route("**/api/drafts**", async (route) => {
     const req = route.request();
@@ -69,6 +111,17 @@ if (!live)
             packUnit: null,
             priceMinor: null,
             reason: "unknown_item",
+          },
+        ];
+      if (body.text === "eggs")
+        draft.lines = [
+          {
+            ...draft.lines[0],
+            source: "eggs",
+            text: "eggs",
+            requestedQuantity: null,
+            requestedUnit: null,
+            reason: "missing_quantity",
           },
         ];
       if (body.reviewLanguage === "es") {
@@ -140,11 +193,48 @@ const wait = async (fn, message) => {
 const approve = () =>
   page.getByRole("button", { name: "Approve simulated order", exact: true });
 const article = (name) => page.getByRole("article").filter({ hasText: name });
+async function scan(text = "2 doz eggs, 1 case oat milk") {
+  nextTranscription = text;
+  const responsePromise = page.waitForResponse((response) =>
+    response.url().endsWith("/api/transcribe"),
+  );
+  await page.locator("#upload-note").setInputFiles({
+    name: "kitchen-note.png",
+    mimeType: "image/png",
+    buffer: await makePhoto(text),
+  });
+  const response = await responsePromise;
+  if (response.ok()) {
+    successfulScans++;
+    await page.locator("#kitchen-note").waitFor();
+    if (!live)
+      assert.equal(await page.locator("#kitchen-note").inputValue(), text);
+  } else {
+    assert.equal(
+      response.status(),
+      503,
+      "Only transcription unavailability uses the explicit fallback",
+    );
+    fallbackScans++;
+    await page
+      .getByRole("button", {
+        name: /Transcribe this note myself|Transcribir esta nota manualmente/,
+      })
+      .click();
+  }
+  await page.locator("#kitchen-note").fill(text);
+  if (!live && successfulScans === 1)
+    await page.screenshot({
+      path: `${output}/mobile-transcription.png`,
+      fullPage: true,
+      caret: "initial",
+    });
+}
 async function start(text = "2 doz eggs, 1 case oat milk") {
   await page.goto(base);
-  await page.getByLabel("YOUR KITCHEN NOTE", { exact: true }).fill(text);
+  await scan(text);
   await page
-    .getByRole("button", { name: "Review my list", exact: true })
+    .getByRole("button", { name: "Check supplier matches", exact: true })
     .click();
   await page
     .getByRole("heading", { name: "A second look, before you order." })
@@ -164,31 +254,49 @@ async function check(name, fn) {
   console.log("PASS " + name);
 }
 try {
-  await check("mobile intake and empty submission", async () => {
-    await page.goto(base);
-    assert.equal(
-      await page
-        .getByRole("button", { name: "Review my list", exact: true })
-        .isDisabled(),
-      true,
-    );
-    assert.equal(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= window.innerWidth,
-      ),
-      true,
-    );
-    await page.screenshot({
-      path: `${output}/mobile-intake.png`,
-      fullPage: true,
-    });
-  });
+  await check(
+    "photo-first mobile intake has camera/upload and no manual list",
+    async () => {
+      await page.goto(base);
+      assert.equal(
+        await page
+          .getByRole("button", { name: "Take a photo", exact: true })
+          .count(),
+        1,
+      );
+      assert.equal(
+        await page
+          .getByRole("button", { name: "Upload note photo", exact: true })
+          .count(),
+        1,
+      );
+      assert.equal(await page.locator("textarea").count(), 0);
+      assert.equal(
+        await page
+          .getByRole("button", { name: "Check supplier matches", exact: true })
+          .count(),
+        0,
+      );
+      assert.equal(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
+        ),
+        true,
+      );
+      await page.screenshot({
+        path: `${output}/mobile-intake.png`,
+        fullPage: true,
+        caret: "initial",
+      });
+    },
+  );
   await check("skip yields $24 and only milk in saved order", async () => {
     await start();
     assert.equal(await approve().isDisabled(), true);
     await page.screenshot({
       path: `${output}/mobile-review.png`,
       fullPage: true,
+      caret: "initial",
     });
     await article("2 doz eggs")
       .getByRole("button", { name: "Skip this item" })
@@ -212,6 +320,7 @@ try {
     await page.screenshot({
       path: `${output}/mobile-order-skip.png`,
       fullPage: true,
+      caret: "initial",
     });
     if (live) {
       const retry = await context.request.post(
@@ -245,6 +354,7 @@ try {
     await page.screenshot({
       path: `${output}/mobile-order-buy.png`,
       fullPage: true,
+      caret: "initial",
     });
   });
   await check("all skipped blocks empty approval", async () => {
@@ -311,8 +421,7 @@ try {
     );
     await page.getByRole("button", { name: "Skip this item" }).click();
     await wait(
-      async () =>
-        (await page.locator(".status.skipped").count()) === 1,
+      async () => (await page.locator(".status.skipped").count()) === 1,
       "Unknown skip completed",
     );
     assert.equal(await approve().isDisabled(), true);
@@ -320,9 +429,12 @@ try {
   await check("Spanish intake, review and simulated receipt", async () => {
     await page.goto(base);
     await page.getByLabel("Review language").selectOption("es");
-    await page.getByRole("button", { name: "Probar un ejemplo" }).click();
+    await scan("2 docenas de huevos, 1 caja de leche de avena");
     await page
-      .getByRole("button", { name: "Revisar mi lista", exact: true })
+      .getByRole("button", {
+        name: "Buscar productos del proveedor",
+        exact: true,
+      })
       .click();
     await page
       .getByRole("heading", { name: "Una revisión antes de pedir." })
@@ -345,8 +457,56 @@ try {
     await page.screenshot({
       path: `${output}/mobile-spanish.png`,
       fullPage: true,
+      caret: "initial",
     });
   });
+  await check(
+    "matched ingredient missing a quantity requires correction, not pack acceptance",
+    async () => {
+      await start("eggs");
+      assert.equal(await approve().isDisabled(), true);
+      assert.equal(
+        await page.getByRole("button", { name: "Buy selected cases" }).count(),
+        0,
+      );
+    },
+  );
+  if (!live) {
+    await check(
+      "transcription failure exposes an explicit manual fallback",
+      async () => {
+        await page.goto(base);
+        scanFailure = true;
+        await scan();
+        scanFailure = false;
+        assert.equal(
+          await page
+            .getByText("MANUALLY TRANSCRIBED NOTE", { exact: true })
+            .count(),
+          1,
+        );
+        await page
+          .getByRole("button", { name: "Check supplier matches", exact: true })
+          .click();
+        await page
+          .getByRole("heading", { name: "A second look, before you order." })
+          .waitFor();
+      },
+    );
+    await check(
+      "invalid photo does not reveal a fabricated transcription",
+      async () => {
+        await page.goto(base);
+        await page.locator("#upload-note").setInputFiles({
+          name: "note.txt",
+          mimeType: "text/plain",
+          buffer: Buffer.from("not an image"),
+        });
+        await page.locator(".scan-error, .error-banner").waitFor();
+        assert.equal(await page.locator("#kitchen-note").count(), 0);
+      },
+    );
+  }
   if (!live) {
     await check("invalid case count cannot submit", async () => {
       await start();
@@ -374,7 +534,7 @@ try {
         await article("2 doz eggs")
           .getByRole("button", { name: "Skip this item" })
           .click();
-        await page.getByRole("alert").waitFor();
+        await page.locator(".scan-error, .error-banner").waitFor();
         await assertTotal("$48.00");
         assert.equal(requests.length, before + 1);
         assert.equal(await approve().isDisabled(), true);
@@ -386,22 +546,18 @@ try {
     );
     await check("network failure preserves note and allows retry", async () => {
       await page.goto(base);
-      await page
-        .getByLabel("YOUR KITCHEN NOTE", { exact: true })
-        .fill("2 doz eggs, 1 case oat milk");
+      await scan();
       failNext = "network";
       await page
-        .getByRole("button", { name: "Review my list", exact: true })
+        .getByRole("button", { name: "Check supplier matches", exact: true })
         .click();
-      await page.getByRole("alert").waitFor();
+      await page.locator(".scan-error, .error-banner").waitFor();
       assert.equal(
-        await page
-          .getByLabel("YOUR KITCHEN NOTE", { exact: true })
-          .inputValue(),
+        await page.locator("#kitchen-note").inputValue(),
         "2 doz eggs, 1 case oat milk",
       );
       await page
-        .getByRole("button", { name: "Review my list", exact: true })
+        .getByRole("button", { name: "Check supplier matches", exact: true })
         .click();
       await page
         .getByRole("heading", { name: "A second look, before you order." })
@@ -413,7 +569,7 @@ try {
       await article("2 doz eggs")
         .getByRole("button", { name: "Skip this item" })
         .click();
-      await page.getByRole("alert").waitFor();
+      await page.locator(".scan-error, .error-banner").waitFor();
       assert.equal(await approve().isDisabled(), true);
       assert.equal(
         await article("2 doz eggs")
@@ -435,6 +591,7 @@ try {
     await page.screenshot({
       path: `${output}/desktop-intake.png`,
       fullPage: true,
+      caret: "initial",
     });
     await start();
     assert.equal(
@@ -446,9 +603,13 @@ try {
     await page.screenshot({
       path: `${output}/desktop-review.png`,
       fullPage: true,
+      caret: "initial",
     });
   });
   assert.deepEqual(pageErrors, [], "No uncaught browser errors");
+  console.log(
+    `Photo endpoint: ${successfulScans} successful responses; ${fallbackScans} explicit unavailable-service fallbacks.`,
+  );
   console.log(
     `${completed} checks passed (${live ? "LIVE BACKEND" : "CONTRACT FIXTURES"}). Screenshots: ${output}`,
   );

@@ -4,19 +4,37 @@ export const copy = {
     eyebrow: "A little clarity before closing.",
     title: "Your kitchen notes.\nReady for your supplier.",
     intro:
-      "Turn your list into an order you can check, one ingredient at a time.",
+      "Photograph your handwritten kitchen note. We’ll read it in its original language and help you check every item.",
     language: "Review language",
-    note: "What does your kitchen need?",
+    note: "Start with your handwritten note.",
     noteHint:
-      "Paste your list. Include a quantity and unit for each ingredient.",
+      "Take a clear photo or choose one from your phone. You’ll check the extracted list before ordering.",
     placeholder: "2 doz eggs, 1 case oat milk",
-    sample: "Try an example",
-    review: "Review my list",
-    reviewing: "Reading your list…",
+    takePhoto: "Take a photo",
+    uploadPhoto: "Upload note photo",
+    replacePhoto: "Replace photo",
+    scanPrompt: "From handwriting to a clear list.",
+    scanHint: "English or Spanish notes · JPG, PNG or WebP",
+    photoAlt: "Your handwritten kitchen note",
+    photoCaption:
+      "Keep the handwriting in view while you check the transcription.",
+    photoPrivacy:
+      "Your photo is sent to our reading service to extract the text. No supplier order is sent.",
+    scanning: "Reading your handwriting…",
+    invalidPhoto: "Choose a clear JPG, PNG or WebP photo under 20 MB.",
+    scanFailure:
+      "We couldn’t read this photo. Try a clearer image, or transcribe what you see below.",
+    manualFallback: "Transcribe this note myself",
+    extracted: "CHECK THE EXTRACTED LIST",
+    manualHeading: "MANUALLY TRANSCRIBED NOTE",
+    extractedHint:
+      "Compare this text with your photo. Correct names, quantities and units; [?] means unclear handwriting.",
+    review: "Check supplier matches",
+    reviewing: "Matching your items…",
     source: "YOUR KITCHEN NOTE",
     editList: "Start a new list",
     workflow: "Your order, in three steps",
-    intake: "Write",
+    intake: "Scan",
     check: "Review",
     preview: "Preview",
     reviewTitle: "A second look, before you order.",
@@ -98,19 +116,36 @@ export const copy = {
     eyebrow: "Un poco de claridad antes de cerrar.",
     title: "Las notas de tu cocina.\nListas para tu proveedor.",
     intro:
-      "Convierte tu lista en un pedido que puedes revisar, ingrediente por ingrediente.",
+      "Fotografía tu nota de cocina escrita a mano. La leeremos en su idioma original para ayudarte a revisar cada producto.",
     language: "Idioma de revisión",
-    note: "¿Qué necesita tu cocina?",
+    note: "Empieza con tu nota escrita a mano.",
     noteHint:
-      "Pega tu lista. Incluye una cantidad y unidad para cada ingrediente.",
+      "Toma una foto clara o elige una de tu teléfono. Revisarás la lista extraída antes de pedir.",
     placeholder: "2 docenas de huevos, 1 caja de leche de avena",
-    sample: "Probar un ejemplo",
-    review: "Revisar mi lista",
-    reviewing: "Leyendo tu lista…",
+    takePhoto: "Tomar una foto",
+    uploadPhoto: "Subir foto de la nota",
+    replacePhoto: "Cambiar foto",
+    scanPrompt: "De una nota manuscrita a una lista clara.",
+    scanHint: "Notas en inglés o español · JPG, PNG o WebP",
+    photoAlt: "Tu nota de cocina escrita a mano",
+    photoCaption: "Compara la nota manuscrita con la transcripción.",
+    photoPrivacy:
+      "La foto se envía a nuestro servicio de lectura para extraer el texto. No se envía ningún pedido al proveedor.",
+    scanning: "Leyendo tu nota manuscrita…",
+    invalidPhoto: "Elige una foto clara JPG, PNG o WebP de menos de 20 MB.",
+    scanFailure:
+      "No pudimos leer la foto. Prueba una imagen más clara o transcribe lo que ves.",
+    manualFallback: "Transcribir esta nota manualmente",
+    extracted: "REVISA LA LISTA EXTRAÍDA",
+    manualHeading: "NOTA TRANSCRITA MANUALMENTE",
+    extractedHint:
+      "Compara el texto con tu foto. Corrige nombres, cantidades y unidades; [?] indica texto poco claro.",
+    review: "Buscar productos del proveedor",
+    reviewing: "Buscando tus productos…",
     source: "TU NOTA DE COCINA",
     editList: "Empezar una lista nueva",
     workflow: "Tu pedido, en tres pasos",
-    intake: "Escribir",
+    intake: "Escanear",
     check: "Revisar",
     preview: "Vista previa",
     reviewTitle: "Una revisión antes de pedir.",
@@ -190,3 +225,13 @@ export const copy = {
   },
 };
 export type Copy = (typeof copy)[Language];
+
+export function unitLabel(unit: string | null, language: Language) {
+  const t = copy[language];
+  if (unit === "each") return t.each;
+  if (unit === "carton" || unit === "cartons") return t.cartons;
+  if (unit === "case") return t.caseUnit;
+  if (unit === "cases") return t.casesUnit;
+  if (unit === "lb") return language === "es" ? "libras" : "lb";
+  return unit ?? "";
+}

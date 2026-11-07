@@ -1,7 +1,8 @@
 "use client";
-import { useRef, useState } from "react";
-import { copy } from "./components/copy";
+import { useEffect, useRef, useState } from "react";
+import { copy, unitLabel } from "./components/copy";
 import { ReviewLine } from "./components/review-line";
+import { PhotoIntake } from "./components/photo-intake";
 import {
   money,
   type Draft,
@@ -35,6 +36,11 @@ function isOrder(value: unknown): value is Order {
 export default function Home() {
   const [language, setLanguage] = useState<Language>("en");
   const [text, setText] = useState("");
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [intakeMode, setIntakeMode] = useState<"extracted" | "manual" | null>(
+    null,
+  );
   const [draft, setDraft] = useState<Draft | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
   const [pending, setPending] = useState<
@@ -44,6 +50,10 @@ export default function Home() {
   const [finalized, setFinalized] = useState(false);
   const busy = useRef(false);
   const heading = useRef<HTMLHeadingElement>(null);
+  const errorBanner = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (error) errorBanner.current?.focus();
+  }, [error]);
   const t = copy[language];
   const focusHeading = () =>
     requestAnimationFrame(() => heading.current?.focus());
@@ -126,6 +136,9 @@ export default function Home() {
   function reset() {
     if (busy.current) return;
     setDraft(null);
+    setText("");
+    setPhoto(null);
+    setIntakeMode(null);
     setOrder(null);
     setError("");
     setFinalized(false);
@@ -175,7 +188,12 @@ export default function Home() {
           ))}
         </nav>
         {error && (
-          <div role="alert" className="error-banner">
+          <div
+            role="alert"
+            className="error-banner"
+            ref={errorBanner}
+            tabIndex={-1}
+          >
             {error}
           </div>
         )}
@@ -203,10 +221,10 @@ export default function Home() {
                 <div className="paper paper-front">
                   <span className="paper-title">THE CLOSING LIST</span>
                   <span className="paper-line">
-                    2 doz eggs <span>↗</span>
+                    2 docenas de huevos <span>↗</span>
                   </span>
                   <span className="paper-line">
-                    oat milk <span>✓</span>
+                    leche de avena <span>✓</span>
                   </span>
                   <span className="paper-line light">
                     a fresh start tomorrow.
@@ -222,7 +240,7 @@ export default function Home() {
               className="intake-card"
               onSubmit={(event) => {
                 event.preventDefault();
-                if (text.trim())
+                if (text.trim() && !scanning)
                   void request(
                     "/api/drafts",
                     "POST",
@@ -243,39 +261,52 @@ export default function Home() {
                 onChange={(event) =>
                   setLanguage(event.target.value as Language)
                 }
-                disabled={!!pending}
+                disabled={!!pending || scanning}
               >
                 <option value="en">English</option>
                 <option value="es">Español</option>
               </select>
-              <label className="field-label" htmlFor="kitchen-note">
-                {t.source}
-              </label>
-              <textarea
-                id="kitchen-note"
-                value={text}
-                onChange={(event) => setText(event.target.value)}
-                placeholder={t.placeholder}
-                rows={5}
-                required
-                maxLength={4000}
+              <PhotoIntake
+                t={t}
+                photo={photo}
                 disabled={!!pending}
+                onPhoto={setPhoto}
+                onStart={() => {
+                  setText("");
+                  setIntakeMode(null);
+                  setError("");
+                }}
+                onText={(value) => {
+                  setText(value);
+                  setIntakeMode("extracted");
+                }}
+                onManual={() => setIntakeMode("manual")}
+                onBusy={setScanning}
               />
-              <button
-                className="text-button example-button"
-                type="button"
-                disabled={!!pending}
-                onClick={() => setText(t.placeholder)}
-              >
-                <span aria-hidden="true">＋</span> {t.sample}
-              </button>
-              <button
-                className="button primary full-width"
-                disabled={!!pending || !text.trim()}
-              >
-                {pending === "create" ? t.reviewing : t.review}
-                <span aria-hidden="true">→</span>
-              </button>
+              {intakeMode && (
+                <div className="extracted-note">
+                  <label className="field-label" htmlFor="kitchen-note">
+                    {intakeMode === "extracted" ? t.extracted : t.manualHeading}
+                  </label>
+                  <p className="muted small">{t.extractedHint}</p>
+                  <textarea
+                    id="kitchen-note"
+                    value={text}
+                    onChange={(event) => setText(event.target.value)}
+                    rows={5}
+                    required
+                    maxLength={5000}
+                    disabled={!!pending || scanning}
+                  />
+                  <button
+                    className="button primary full-width"
+                    disabled={!!pending || scanning || !text.trim()}
+                  >
+                    {pending === "create" ? t.reviewing : t.review}
+                    <span aria-hidden="true">→</span>
+                  </button>
+                </div>
+              )}
               <p className="simulation-note">{t.simulation}</p>
             </form>
           </section>
@@ -309,7 +340,7 @@ export default function Home() {
                           {t.sku} {line.sku} · {line.cases}{" "}
                           {line.cases === 1 ? t.caseUnit : t.casesUnit}
                           {original?.packSize != null
-                            ? ` × ${original.packSize} ${original.packUnit === "each" ? t.each : original.packUnit === "cartons" ? t.cartons : (original.packUnit ?? "")}`
+                            ? ` × ${original.packSize} ${unitLabel(original.packUnit, language)}`
                             : ""}
                         </small>
                         <small>
@@ -392,7 +423,11 @@ export default function Home() {
                     ))
                   )}
                 </ul>
-                <div className="summary-total">
+                <div
+                  className="summary-total"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
                   <span>{held ? t.subtotal : t.total}</span>
                   <strong>{money(draft.totalMinor, language)}</strong>
                 </div>
@@ -425,6 +460,13 @@ export default function Home() {
                 <p className="simulation-note">{t.simulation}</p>
                 <div className="summary-note">
                   <p className="field-label">{t.source}</p>
+                  {photo && (
+                    <img
+                      className="review-photo"
+                      src={photo}
+                      alt={t.photoAlt}
+                    />
+                  )}
                   <p>{text}</p>
                 </div>
               </aside>
