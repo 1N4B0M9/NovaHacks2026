@@ -1,6 +1,7 @@
 "use client";
 import { localize } from "../lib/locale";
 import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { copy, unitLabel } from "./components/copy";
 import { PhotoIntake } from "./components/photo-intake";
 import {
@@ -11,6 +12,22 @@ import {
 } from "./components/order-types";
 
 type Failure = { error?: string; draft?: Draft };
+type SearchRow = {
+  id: string;
+  source: string;
+  phase: "wait" | "search" | "done";
+  label: string | null;
+  supplier: string | null;
+  priceMinor: number | null;
+  productUrl: string | null;
+  catalog: boolean;
+};
+function noteLines(value: string) {
+  return value
+    .split(/\r?\n|[;；，、]|,(?!\d)/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
 function isDraft(value: unknown): value is Draft {
   const draft = value as Draft | null;
   return (
@@ -42,11 +59,14 @@ export default function Home() {
     null,
   );
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [searchFeed, setSearchFeed] = useState<SearchRow[] | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
   const [pending, setPending] = useState<"create" | "approve" | null>(null);
   const [error, setError] = useState("");
   const [finalized, setFinalized] = useState(false);
   const busy = useRef(false);
+  const searchAbort = useRef<AbortController | null>(null);
+  const searchGeneration = useRef(0);
   const heading = useRef<HTMLHeadingElement>(null);
   const errorBanner = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -68,7 +88,7 @@ export default function Home() {
     const controller = new AbortController();
     const timeout = setTimeout(
       () => controller.abort(),
-      operation === "create" ? 60000 : 15000,
+      operation === "create" ? 90000 : 15000,
     );
     try {
       const response = await fetch(path, {
@@ -128,6 +148,7 @@ export default function Home() {
   function reset() {
     if (busy.current) return;
     setDraft(null);
+    setSearchFeed(null);
     setText("");
     setPhoto(null);
     setIntakeMode(null);
@@ -136,13 +157,164 @@ export default function Home() {
     setFinalized(false);
     focusHeading();
   }
+  function leaveSearch() {
+    searchGeneration.current += 1;
+    searchAbort.current?.abort();
+    searchAbort.current = null;
+    busy.current = false;
+    setPending(null);
+    setSearchFeed(null);
+    setError("");
+  }
+  async function startSearch() {
+    if (busy.current) return;
+    const generation = ++searchGeneration.current;
+    const alive = () => searchGeneration.current === generation;
+    busy.current = true;
+    flushSync(() => {
+      setPending("create");
+      setError("");
+      setSearchFeed(
+        noteLines(text).map((source, index) => ({
+          id: `local-${index}`,
+          source,
+          phase: "wait" as const,
+          label: null,
+          supplier: null,
+          priceMinor: null,
+          productUrl: null,
+          catalog: false,
+        })),
+      );
+    });
+    focusHeading();
+    const controller = new AbortController();
+    searchAbort.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 90000);
+    let finished = false;
+    try {
+      const response = await fetch("/api/drafts/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: text.trim(),
+          reviewLanguage: language,
+          zip: zip.trim(),
+        }),
+        signal: controller.signal,
+      });
+      if (!alive()) return;
+      if (!response.ok || !response.body) {
+        setError(response.status === 400 ? t.invalid : t.retry);
+        return;
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (alive()) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const chunks = buffer.split("\n");
+        buffer = chunks.pop() ?? "";
+        for (const chunk of chunks) {
+          if (!alive() || !chunk.trim()) continue;
+          let event: Record<string, unknown>;
+          try {
+            event = JSON.parse(chunk) as Record<string, unknown>;
+          } catch {
+            continue;
+          }
+          if (event.type === "list" && Array.isArray(event.lines)) {
+            const rows: SearchRow[] = [];
+            for (const line of event.lines) {
+              if (!line || typeof line !== "object") continue;
+              const row = line as {
+                id?: unknown;
+                source?: unknown;
+                status?: unknown;
+              };
+              if (typeof row.id !== "string" || typeof row.source !== "string")
+                continue;
+              rows.push({
+                id: row.id,
+                source: row.source,
+                phase: row.status === "needs_review" ? "wait" : "done",
+                label: null,
+                supplier: null,
+                priceMinor: null,
+                productUrl: null,
+                catalog: row.status === "ready",
+              });
+            }
+            setSearchFeed(rows);
+          } else if (event.type === "line" && typeof event.id === "string") {
+            const id = event.id;
+            const searching = event.phase === "start";
+            setSearchFeed(
+              (feed) =>
+                feed?.map((row) =>
+                  row.id === id
+                    ? {
+                        ...row,
+                        phase: searching ? "search" : "done",
+                        label:
+                          typeof event.title === "string"
+                            ? event.title
+                            : row.label,
+                        supplier:
+                          typeof event.supplier === "string"
+                            ? event.supplier
+                            : row.supplier,
+                        priceMinor:
+                          typeof event.priceMinor === "number"
+                            ? event.priceMinor
+                            : row.priceMinor,
+                        productUrl:
+                          typeof event.url === "string"
+                            ? event.url
+                            : row.productUrl,
+                      }
+                    : row,
+                ) ?? feed,
+            );
+          } else if (event.type === "draft" && isDraft(event.draft)) {
+            finished = true;
+            setDraft(event.draft);
+            setSearchFeed(null);
+            setOrder(null);
+            setFinalized(false);
+            focusHeading();
+          } else if (event.type === "error") {
+            finished = true;
+            setError(t.retry);
+          }
+        }
+      }
+      if (alive() && !finished) setError(t.unexpected);
+    } catch {
+      if (alive()) setError(t.network);
+    } finally {
+      clearTimeout(timeout);
+      if (searchAbort.current === controller) searchAbort.current = null;
+      if (alive()) {
+        busy.current = false;
+        setPending(null);
+      }
+    }
+  }
   const held =
     draft?.lines.filter((line) => line.status === "needs_review").length ?? 0;
   const included = draft?.lines.filter((line) => line.status === "ready") ?? [];
   const readyToApprove =
     !!draft?.canApprove && !held && included.length > 0 && !finalized;
   const destination = /^\d{5}(?:-\d{4})?$/.test(zip.trim());
-  const step = order ? 3 : draft ? 2 : 1;
+  const searching = !!searchFeed && !draft;
+  const activeSearch = searchFeed?.find((row) => row.phase === "search");
+  const searchKnown =
+    searchFeed?.filter((row) => row.phase === "done" && row.label) ?? [];
+  const searchHasPrice = searchKnown.some((row) => row.priceMinor != null);
+  const step = order ? 3 : draft || searching ? 2 : 1;
   return (
     <div className="app-shell" lang={language}>
       <header className="topbar">
@@ -191,13 +363,145 @@ export default function Home() {
           </div>
         )}
         <div role="status" className="sr-only">
-          {pending === "create"
-            ? t.reviewing
+          {searching
+            ? activeSearch
+              ? `${t.searchActive}: ${activeSearch.source}`
+              : t.searchTitle
             : pending === "approve"
               ? t.approving
               : ""}
         </div>
-        {!draft ? (
+        {searching ? (
+          <section className="review-section">
+            <div className="review-heading">
+              <div>
+                <p className="eyebrow">02 / {t.check.toUpperCase()}</p>
+                <h1 tabIndex={-1} ref={heading}>
+                  {t.reviewTitle}
+                </h1>
+                <p className="lead-text">
+                  {t.searchIntro} {zip.trim()}.
+                </p>
+              </div>
+              <button className="button ghost" onClick={leaveSearch}>
+                {t.searchBack}
+              </button>
+            </div>
+            <div className="review-layout">
+              <div
+                className="line-list"
+                aria-live="polite"
+                aria-busy="true"
+              >
+                {searchFeed?.map((row) => {
+                  const status =
+                    row.phase === "done"
+                      ? row.label
+                        ? t.searchFound
+                        : row.catalog
+                          ? t.searchCatalog
+                          : t.noMatch
+                      : row.phase === "search"
+                        ? t.searchActive
+                        : t.searchWaiting;
+                  return (
+                    <article
+                      className={`line-card search-row ${row.phase} ${
+                        row.phase === "done" && row.label ? "ready" : "needs_review"
+                      }`}
+                      key={row.id}
+                    >
+                      <p className="field-label">{row.source}</p>
+                      {row.phase === "done" && row.label ? (
+                        <>
+                          <div className="line-heading">
+                            <h3>
+                              {row.productUrl ? (
+                                <a
+                                  href={row.productUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {row.label}
+                                </a>
+                              ) : (
+                                row.label
+                              )}
+                            </h3>
+                            {row.priceMinor != null ? (
+                              <strong>{money(row.priceMinor, language)}</strong>
+                            ) : null}
+                          </div>
+                          <p className="purchase-description">
+                            {row.supplier ? `${row.supplier} · ` : ""}
+                            {row.priceMinor == null ? `${t.priceAtStore} · ` : ""}
+                            {t.shipsTo} {zip.trim()}
+                          </p>
+                        </>
+                      ) : (
+                        <div className="line-heading">
+                          <p className="search-status">
+                            {(row.phase === "search" || row.phase === "wait") && (
+                              <span className="search-dot" aria-hidden="true" />
+                            )}
+                            {status}
+                          </p>
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+              <aside className="summary-card" aria-label={t.summary}>
+                <p className="card-kicker">03 / {t.preview.toUpperCase()}</p>
+                <h2>{t.summary}</h2>
+                <p className="muted small">{t.summaryHint}</p>
+                <ul className="summary-lines">
+                  {searchKnown.length === 0 ? (
+                    <li className="empty-summary">{t.searchWaiting}</li>
+                  ) : (
+                    searchKnown.map((row) => (
+                      <li key={row.id}>
+                        <div>
+                          <strong>{row.label}</strong>
+                          <small>
+                            {row.supplier ? `${row.supplier} · ` : ""}
+                            {t.shipsTo} {zip.trim()}
+                          </small>
+                        </div>
+                        <strong>
+                          {row.priceMinor != null
+                            ? money(row.priceMinor, language)
+                            : "—"}
+                        </strong>
+                      </li>
+                    ))
+                  )}
+                </ul>
+                <div className="summary-total" aria-live="polite" aria-atomic="true">
+                  <span>{t.subtotal}</span>
+                  <strong>
+                    {searchHasPrice
+                      ? money(
+                          searchKnown.reduce(
+                            (sum, row) => sum + (row.priceMinor ?? 0),
+                            0,
+                          ),
+                          language,
+                        )
+                      : "—"}
+                  </strong>
+                </div>
+                <p className="approval-hint">{t.searchCartHint}</p>
+                <button className="button primary full-width" disabled>
+                  {t.approve}
+                  <span aria-hidden="true">→</span>
+                </button>
+                <p className="simulation-note">{t.simulation}</p>
+              </aside>
+            </div>
+          </section>
+        ) : !draft ? (
           <section className="intake-layout">
             <div className="intro">
               <p className="eyebrow">
@@ -231,17 +535,7 @@ export default function Home() {
               className="intake-card"
               onSubmit={(event) => {
                 event.preventDefault();
-                if (text.trim() && destination && !scanning)
-                  void request(
-                    "/api/drafts",
-                    "POST",
-                    {
-                      text: text.trim(),
-                      reviewLanguage: language,
-                      zip: zip.trim(),
-                    },
-                    "create",
-                  );
+                if (text.trim() && destination && !scanning) void startSearch();
               }}
             >
               <div className="card-kicker">01 / {t.intake.toUpperCase()}</div>
