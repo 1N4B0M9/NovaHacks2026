@@ -4,6 +4,8 @@ import { dirname, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { interpret, type Line } from "./interpret";
 import { isHeading } from "./match";
+import { OrderError } from "./order-error";
+export { OrderError } from "./order-error";
 
 type Input = Record<string, unknown>;
 type Locale = "en" | "es";
@@ -26,15 +28,6 @@ type Order = {
   totalMinor: number;
   lines: { sku: string; cases: number; priceMinor: number }[];
 };
-export class OrderError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-    public draft?: Draft,
-  ) {
-    super(message);
-  }
-}
 function requiredText(value: unknown, limit: number): string {
   if (typeof value !== "string" || !value.trim() || value.length > limit)
     throw new OrderError(400, "invalid_text");
