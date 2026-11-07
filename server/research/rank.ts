@@ -193,6 +193,7 @@ export function rank(
         (a.packUnit === b.packUnit
           ? (a.packQuantity ?? Infinity) - (b.packQuantity ?? Infinity)
           : 0) ||
+        (a.priceMinor ?? Infinity) - (b.priceMinor ?? Infinity) ||
         a.url.localeCompare(b.url)
       );
     });

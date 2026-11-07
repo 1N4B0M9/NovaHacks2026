@@ -38,7 +38,7 @@ function requiredText(value: unknown, limit: number): string {
 function summarize(draft: Draft) {
   const ready = draft.lines.filter((line) => line.status === "ready");
   draft.totalMinor = ready.reduce(
-    (sum, line) => sum + line.cases! * line.priceMinor!,
+    (sum, line) => sum + (line.cases ?? 0) * (line.priceMinor ?? 0),
     0,
   );
   draft.canApprove =
@@ -173,7 +173,7 @@ export class Orders {
           .map((l) => ({
             sku: l.sku!,
             cases: l.cases!,
-            priceMinor: l.priceMinor!,
+            priceMinor: l.priceMinor ?? 0,
           })),
       };
       this.db
@@ -228,8 +228,8 @@ export class Orders {
       group.forEach((line, index) => {
         const item = items[index];
         const offer =
-          item?.source === line.source ? shippedOffer(item.offers) : undefined;
-        updates.set(line.id, offer ? fromOffer(offer) : fromCatalog(line));
+          item?.source === line.source ? chosenOffer(item.offers) : undefined;
+        updates.set(line.id, offer ? fromOffer(offer, line) : fromCatalog(line));
       });
     }
     return this.change(id, input.version, (draft, receipt) => {
@@ -272,6 +272,7 @@ function groupsOf(lines: Line[]) {
 }
 type OfferPick = {
   canCompare?: boolean;
+  evidenceKind?: string;
   packs?: number | null;
   priceMinor?: number | null;
   packQuantity?: number | null;
@@ -295,16 +296,51 @@ function shippedOffer(offers: OfferPick[]) {
       offer.url,
   );
 }
-function fromOffer(offer: NonNullable<ReturnType<typeof shippedOffer>>): Partial<Line> {
+function listedOffer(offers: OfferPick[]) {
+  const listed = offers.filter(
+    (offer) =>
+      offer.evidenceKind === "web_search" &&
+      offer.supplier &&
+      offer.title &&
+      offer.productId &&
+      offer.url &&
+      /^https:\/\//.test(offer.url),
+  );
+  return listed.find((offer) => offer.priceMinor != null) ?? listed[0];
+}
+function chosenOffer(offers: OfferPick[]) {
+  return shippedOffer(offers) ?? listedOffer(offers);
+}
+function fromOffer(
+  offer: NonNullable<ReturnType<typeof chosenOffer>>,
+  line: Line,
+): Partial<Line> {
+  const packUnit = offer.packUnit ?? "each";
+  const counted =
+    packUnit === "each" &&
+    (offer.packQuantity ?? 1) === 1 &&
+    (line.requestedUnit === "each" || line.requestedUnit == null) &&
+    line.requestedQuantity != null
+      ? Math.ceil(line.requestedQuantity)
+      : null;
+  const cases =
+    offer.packs && offer.packs > 0
+      ? offer.packs
+      : counted != null &&
+          Number.isSafeInteger(counted) &&
+          counted >= 1 &&
+          counted <= 100000
+        ? counted
+        : 1;
   return {
     sku: offer.productId!,
     label: offer.title!,
     supplier: offer.supplier!,
     productUrl: offer.url!,
-    packSize: offer.packQuantity!,
-    packUnit: offer.packUnit!,
-    priceMinor: offer.priceMinor!,
-    cases: offer.packs!,
+    packSize: offer.packQuantity ?? 1,
+    packUnit,
+    priceMinor: offer.priceMinor ?? null,
+    cases,
     status: "ready",
     reason: null,
   };

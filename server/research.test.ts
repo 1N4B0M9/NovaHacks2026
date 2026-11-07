@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { ingredient, matchesTitle } from "./research/ingredient";
 import { rank, type Offer } from "./research/rank";
 import { research } from "./research/run";
+import { offersFromWholeFoods } from "./research/area";
 import { searchStore, suppliers } from "./research/storefront";
 import { productsFromSearch } from "./research/web";
 
@@ -309,6 +310,47 @@ test("public product listings fill an empty storefront search without inventing 
   assert.match(item.message, /Public product listings/);
   assert.match(item.offers[0].url, /^https:\/\/world\.openfoodfacts\.org\/product\/20175887$/);
 });
+test("a ZIP searches the web for a nearby grocery when stores have no comparable offer", async () => {
+  let webCalls = 0;
+  let areaZip = "";
+  const result = await research(
+    { text: "un pollo entero", reviewLanguage: "es", deliveryLocation: "10011" },
+    async () => [],
+    undefined,
+    async () => {
+      webCalls++;
+      return [];
+    },
+    async (_item, zip) => {
+      areaZip = zip;
+      return [
+        {
+          supplier: "Whole Foods Market",
+          title: "Whole Chicken",
+          productId: "whole-chicken",
+          url: "https://www.wholefoodsmarket.com/grocery/product/whole-chicken",
+          evidenceUrl: "https://html.duckduckgo.com/html/",
+          evidenceKind: "web_search",
+          retrievedAt: "2026-11-07T20:00:00.000Z",
+          priceMinor: null,
+          currency: null,
+          packQuantity: null,
+          packUnit: null,
+          available: null,
+          shippingMinor: null,
+          feesMinor: null,
+          minimumPacks: null,
+          minimumSpendMinor: null,
+          locationEligible: true,
+        },
+      ];
+    },
+  );
+  assert.equal(areaZip, "10011");
+  assert.equal(webCalls, 0);
+  assert.equal(result.items[0].offers[0].supplier, "Whole Foods Market");
+  assert.equal(result.items[0].stores.at(-1)?.supplier, "Nearby web search");
+});
 test("a storefront match skips the public product index", async () => {
   let calls = 0;
   const result = await research(
@@ -323,6 +365,76 @@ test("a storefront match skips the public product index", async () => {
   assert.equal(calls, 0);
   assert.equal(result.items[0].offers[0].supplier, "Test store");
   assert.equal(result.items[0].stores.some((s) => s.supplier === "Open Food Facts"), false);
+});
+test("area search keeps a nearby grocery product and drops guides", () => {
+  const store = { id: "10131", name: "Chelsea" };
+  const offers = offersFromWholeFoods(
+    [
+      {
+        name: "Whole Chicken Legs",
+        slug: "whole-chicken-legs",
+        regularPrice: 3.99,
+        uom: "lb",
+      },
+      {
+        name: "Whole Chicken",
+        slug: "whole-chicken",
+        regularPrice: 3.99,
+        uom: "lb",
+      },
+      {
+        name: "Potato Pancakes",
+        slug: "potato-pancakes",
+        regularPrice: 8.99,
+        uom: "lb",
+      },
+    ],
+    "whole chicken",
+    store,
+    "2026-11-07T20:00:00.000Z",
+  );
+  assert.equal(offers.length, 1);
+  assert.equal(offers[0].supplier, "Whole Foods Market · Chelsea");
+  assert.equal(offers[0].title, "Whole Chicken");
+  assert.equal(offers[0].priceMinor, 399);
+  assert.equal(offers[0].packQuantity, 1);
+  assert.equal(offers[0].packUnit, "lb");
+  assert.equal(offers[0].locationEligible, true);
+  assert.match(offers[0].url, /^https:\/\/www\.wholefoodsmarket\.com\/grocery\/product\/whole-chicken$/);
+  const potatoes = offersFromWholeFoods(
+    [
+      { name: "Potato Pancakes", slug: "potato-pancakes", regularPrice: 8.99, uom: "lb" },
+      { name: "Russet Potato Bag 5 lb", slug: "russet-potato-bag", regularPrice: 4.49 },
+    ],
+    "potatoes",
+    store,
+    "2026-11-07T20:00:00.000Z",
+  );
+  assert.equal(potatoes.length, 1);
+  assert.equal(potatoes[0].title, "Russet Potato Bag 5 lb");
+  assert.equal(potatoes[0].priceMinor, 449);
+  assert.equal(potatoes[0].packUnit, "lb");
+  assert.equal(
+    offersFromWholeFoods(
+      [
+        { name: "Sea Salt & Moss Salt Soak Magnesium, 32 OZ", slug: "salt-soak", regularPrice: 18.59 },
+        { name: "Ancient Fine Sea Salt, 26 OZ", slug: "fine-sea-salt", regularPrice: 14.99 },
+      ],
+      "salt",
+      store,
+      "2026-11-07T20:00:00.000Z",
+    )[0].title,
+    "Ancient Fine Sea Salt, 26 OZ",
+  );
+  assert.equal(
+    offersFromWholeFoods(
+      [{ name: "Not Chicken Bouillon Cubes, 2.5 OZ", slug: "not-chicken", regularPrice: 3.79 }],
+      "chicken bouillon cubes",
+      store,
+      "2026-11-07T20:00:00.000Z",
+    ).length,
+    0,
+  );
 });
 test("chili plurals match and salsa does not count as the herb", () => {
   assert.equal(matchesTitle("green chili", "Green chilies"), true);

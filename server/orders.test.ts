@@ -164,6 +164,43 @@ test("a ZIP selects the best shipped offer and adds it without review", async ()
     store.close();
   }
 });
+test("a nearby web listing is added when the stores have no comparable price", async () => {
+  const store = new Orders(":memory:");
+  try {
+    const draft = store.create({
+      text: "un pollo entero",
+      reviewLanguage: "es",
+    });
+    const cart = await store.recommend(
+      draft.id,
+      { version: 1, zip: "10011" },
+      async () => ({
+        items: [
+          {
+            source: "un pollo entero",
+            offers: [
+              {
+                evidenceKind: "web_search",
+                supplier: "Whole Foods Market",
+                title: "Whole Chicken",
+                productId: "whole-chicken",
+                url: "https://www.wholefoodsmarket.com/grocery/product/whole-chicken",
+                priceMinor: null,
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    assert.equal(cart.lines[0].status, "ready");
+    assert.equal(cart.lines[0].label, "Whole Chicken");
+    assert.equal(cart.lines[0].supplier, "Whole Foods Market");
+    assert.equal(cart.lines[0].priceMinor, null);
+    assert.equal(cart.canApprove, true);
+  } finally {
+    store.close();
+  }
+});
 test("an unmatched line is left out of the cart", async () => {
   const store = new Orders(":memory:");
   try {
