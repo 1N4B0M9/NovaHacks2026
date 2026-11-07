@@ -1,6 +1,7 @@
 // Frontend view of the wire contract published by the backend owner in issue #3.
 export type Language = "en" | "es";
 export type Line = {
+  match?: ReturnType<typeof import("../../server/match").matchIngredient>;
   id: string;
   source: string;
   text: string;
@@ -23,6 +24,7 @@ export type Line = {
     | null;
 };
 export type Draft = {
+  headings?: string[];
   id: string;
   version: number;
   reviewLanguage: Language;

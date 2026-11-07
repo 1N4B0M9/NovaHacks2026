@@ -6,6 +6,7 @@ import {
   type Line,
   type LineAction,
 } from "./order-types";
+import { IngredientResearch } from "./ingredient-research";
 import type { Copy } from "./copy";
 import { unitLabel } from "./copy";
 
@@ -71,6 +72,7 @@ export function ReviewLine({
           <span>{t.interpreted}:</span> {line.text}
         </p>
       )}
+      <IngredientResearch line={line} language={language} disabled={disabled} />
       <div className="supplier-name">
         <span className="ingredient-icon" aria-hidden="true">
           {line.sku === "E180" ? "◒" : line.sku === "M1" ? "▥" : "◇"}
@@ -106,7 +108,13 @@ export function ReviewLine({
       </dl>
       {line.status === "needs_review" && (
         <p className="reason">
-          {line.reason ? t.reasons[line.reason] : t.reviewRequired}
+          {line.match?.purchaseStatus === "no_local_sku"
+            ? language === "es"
+              ? "Ingrediente reconocido; no está en el catálogo del pedido simulado."
+              : "Ingredient recognized; not in the simulated order catalog."
+            : line.reason
+              ? t.reasons[line.reason]
+              : t.reviewRequired}
         </p>
       )}
       {line.status === "skipped" ? (
