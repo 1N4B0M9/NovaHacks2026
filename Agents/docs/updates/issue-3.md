@@ -2,14 +2,14 @@
 
 **Issue:** https://github.com/1N4B0M9/NovaHacks2026/issues/3
 **Worker:** Partner / Codex
-**Branch:** `codex/frontend-review`
+**Branch:** `frontend-review`
 **Status:** Ready for lead review; live transcription provider smoke check remains external
 
 ## Authorization and scope
 
-The owner assigned #3 for implementation in this chat, then explicitly corrected intake to **photograph handwritten notes in another language → extract an editable list → supplier review**. That instruction supersedes the prior typed-first plan. The correction was [posted to the lead](https://github.com/1N4B0M9/NovaHacks2026/issues/3#issuecomment-6710867168); the lead owns updates to shared product/architecture docs.
+The owner assigned #3 for implementation in this chat, then explicitly corrected intake to **photograph handwritten notes in another language → extract an editable list → supplier review**. That instruction supersedes the prior typed-first plan. The correction was [posted to the lead](https://github.com/1N4B0M9/NovaHacks2026/issues/3#issuecomment-6710867168); the shared requirements and frontend roadmap now record the correction; the lead owns the remaining architecture alignment.
 
-Frontend owns `app/page.tsx`, `app/layout.tsx`, styles, UI components, frontend fixtures/checks, and this task note/evidence. Server, API routes, package files, and the canonical contract are unchanged. No branches have been merged.
+Frontend owns `app/page.tsx`, `app/layout.tsx`, styles, UI components, frontend fixtures/checks, this task note/evidence, the frontend roadmap section, and the scoped photo-first requirements amendment. Server, API routes, package files, and the canonical contract are unchanged. No branches have been merged.
 
 ## Final behavior
 
@@ -25,7 +25,7 @@ Frontend owns `app/page.tsx`, `app/layout.tsx`, styles, UI components, frontend 
 
 ## Verified evidence
 
-Tested the frontend overlaid onto backend PR [#6](https://github.com/1N4B0M9/NovaHacks2026/pull/6), commit `58559d16783d3e74d619b4d476b566bbc19482da`, in an isolated detached integration checkout. No backend changes were brought into the frontend branch.
+Tested the frontend overlaid onto backend PR [#7](https://github.com/1N4B0M9/NovaHacks2026/pull/7) (replacing #6), commit `58559d16783d3e74d619b4d476b566bbc19482da`, in an isolated detached integration checkout. No backend changes were brought into the frontend branch.
 
 - **15 contract-fixture browser checks passed.** Covers photo-first entry, successful mocked transcription, invalid image, service-failure fallback, $24 skip, $78 buy, Spanish receipt, unknown/all-skipped blocking, missing quantity, edit invalidation, invalid case counts, stale recovery, network retry, finalized-draft recovery, and responsive layouts.
 - **9 real-backend browser checks passed**, on both development and production builds. Covers $24 milk-only receipt, $78 eggs/milk receipt, idempotent approval retry, empty/unknown blocking, edit invalidation, missing quantity, Spanish UI, and responsive layout.
@@ -67,5 +67,9 @@ This host supplied Playwright through `PLAYWRIGHT_MODULE=/Users/nathanmorelli/.c
 
 - Configure the lead-owned vision provider and run a real handwritten English/Spanish camera-to-list smoke test before the demo. Configuration values stay server-side and must not be posted in GitHub.
 - Review illustrative translations with a fluent speaker; catalog packs/prices remain unverified fixtures.
-- Update the lead-owned PRD/architecture to make photo intake core rather than optional. The frontend consumes the existing transcription and order wire contracts unchanged.
-- Integrate with #6 and review/merge through the humans. No push to main, merge, or deployment was performed.
+- Align the lead-owned architecture with the photo-first requirements amendment. The frontend consumes the existing transcription and order wire contracts unchanged.
+- Integrate with #7 and review/merge through the humans. No push to main, merge, or deployment was performed.
+
+## Updated lead handoff
+
+The lead requested plain branch naming and a shared feature checklist after initial PR #8 was opened. The frontend branch was renamed to `frontend-review`; #8 is superseded by the replacement PR linked in issue #3. The shared roadmap was copied from backend revision `24ee7f8` and only the frontend section was edited; backend and integration rows were preserved. The requirements amendment quotes the owner-authorized photo-first correction. Backend runtime/API source is unchanged between the tested `58559d1` and `24ee7f8`; the latter adds regression tests and documentation.
