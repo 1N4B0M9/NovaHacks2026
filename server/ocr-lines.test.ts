@@ -69,7 +69,6 @@ test("hybrid verifies the local transcription against the image and flags a mock
         method: "POST",
         body: JSON.stringify({
           image: img,
-          engine: "hybrid",
           sourceLanguage: "zh",
         }),
       }),

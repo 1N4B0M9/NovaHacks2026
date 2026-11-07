@@ -65,7 +65,6 @@ export function PhotoIntake({
   const upload = useRef<HTMLInputElement>(null);
   const busyRef = useRef(false);
   const [reading, setReading] = useState(false);
-  const [engine, setEngine] = useState("hybrid");
   const [source, setSource] = useState("");
   const sourceLanguage = source || language;
   const [original, setOriginal] = useState("");
@@ -107,17 +106,13 @@ export function PhotoIntake({
       setScannedImage(image);
       onPhoto(full);
       prepared = true;
-      timeout = setTimeout(
-        () => controller.abort(),
-        engine === "hybrid" ? 40000 : 22000,
-      );
+      timeout = setTimeout(() => controller.abort(), 40000);
       const response = await fetch("/api/transcribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           image,
-          engine,
-          sourceLanguage: engine === "local-zh" ? "zh" : sourceLanguage,
+          sourceLanguage,
         }),
         signal: controller.signal,
       });
@@ -145,20 +140,15 @@ export function PhotoIntake({
   }
   return (
     <div className="photo-intake">
-      <label htmlFor="note-reader" className="field-label">
-        {localize(
-          language,
-          "Text recognition",
-          "Reconocimiento de texto",
-          "文字识别方式",
-        )}
+      <label className="field-label" htmlFor="note-source">
+        {label("Language on the note", "Idioma de la nota", "清单原文语言")}
       </label>
       <select
-        id="note-reader"
-        value={engine}
+        id="note-source"
+        value={sourceLanguage}
         disabled={disabled || reading}
-        onChange={(event) => {
-          setEngine(event.target.value);
+        onChange={(e) => {
+          setSource(e.target.value);
           if (original) {
             onStart();
             setRows(null);
@@ -167,56 +157,11 @@ export function PhotoIntake({
           }
         }}
       >
-        <option value="hybrid">
-          {label(
-            "Two passes · Tesseract + online",
-            "Dos lecturas · Tesseract y servicio en línea",
-            "双重识别 · 本地与在线核对",
-          )}
-        </option>
-        <option value="openrouter">
-          {localize(
-            language,
-            "Online · multilingual",
-            "En línea · multilingüe",
-            "在线识别 · 多语言",
-          )}
-        </option>
-        <option value="local-zh">
-          {localize(
-            language,
-            "Local OCR · Simplified Chinese",
-            "OCR local · chino simplificado",
-            "本地识别 · 简体中文",
-          )}
-        </option>
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="zh">简体中文</option>
+        <option value="zh-Hant">繁體中文</option>
       </select>
-      {engine === "hybrid" && (
-        <>
-          <label className="field-label" htmlFor="note-source">
-            {label("Language on the note", "Idioma de la nota", "清单原文语言")}
-          </label>
-          <select
-            id="note-source"
-            value={sourceLanguage}
-            disabled={disabled || reading}
-            onChange={(e) => {
-              setSource(e.target.value);
-              if (original) {
-                onStart();
-                setRows(null);
-                setSingleReader("");
-                setCropping(true);
-              }
-            }}
-          >
-            <option value="en">English</option>
-            <option value="es">Español</option>
-            <option value="zh">简体中文</option>
-            <option value="zh-Hant">繁體中文</option>
-          </select>
-        </>
-      )}
       <label className="crop-option">
         <input
           type="checkbox"
@@ -362,16 +307,7 @@ export function PhotoIntake({
           />
         </>
       )}
-      <p className="photo-privacy">
-        {engine === "local-zh"
-          ? localize(
-              language,
-              "This server reads your photo locally. No external recognition service receives it.",
-              "Este servidor lee la foto localmente, sin enviarla a un servicio externo.",
-              "照片由本应用服务器本地识别，不会发送给外部识别服务。",
-            )
-          : t.photoPrivacy}
-      </p>
+      <p className="photo-privacy">{t.photoPrivacy}</p>
       {reading && (
         <p className="scan-status" role="status">
           <span className="scan-dot" />

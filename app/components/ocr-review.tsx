@@ -39,7 +39,6 @@ function EvidenceRow({
         signal: AbortSignal.timeout(40000),
         body: JSON.stringify({
           image: crop,
-          engine: "hybrid",
           sourceLanguage,
           lineOnly: true,
         }),

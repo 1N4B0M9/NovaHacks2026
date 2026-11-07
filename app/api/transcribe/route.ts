@@ -69,12 +69,7 @@ async function readOnline(
 export async function POST(request: Request) {
   return jsonAction(
     request,
-    async ({
-      image,
-      sourceLanguage,
-      engine = "openrouter",
-      lineOnly = false,
-    }) => {
+    async ({ image, sourceLanguage, engine, lineOnly = false }) => {
       if (
         sourceLanguage !== undefined &&
         (typeof sourceLanguage !== "string" ||
@@ -91,11 +86,9 @@ export async function POST(request: Request) {
       ) {
         throw new OrderError(400, "invalid_image");
       }
-      if (engine === "local-zh")
-        return { text: (await transcribeLocally(image)).text };
-      if (engine === "openrouter")
-        return { text: await readOnline(image, sourceLanguage) };
-      if (engine !== "hybrid") throw new OrderError(400, "invalid_engine");
+      // Reject obsolete single-reader requests before any photo is sent externally.
+      if (engine !== undefined && engine !== "hybrid")
+        throw new OrderError(400, "invalid_engine");
       const lang =
         typeof sourceLanguage === "string" && sourceLanguage !== "auto"
           ? sourceLanguage

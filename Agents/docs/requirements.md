@@ -41,4 +41,4 @@ The UI keeps the simulated-order catalog subordinate, never showing its empty su
 
 ## Chinese test order
 
-The merchant can choose Simplified Chinese review and either online transcription or server-local Simplified Chinese OCR. For the printed note “鸡蛋 1 箱” and “燕麦奶 1 箱”, require two ready items and a USD 78 simulated receipt. Preserve OCR output beside the photo; real handwriting accuracy needs separate evaluation.
+The merchant can choose Simplified Chinese review. Every photo goes through local Tesseract OCR and OpenRouter verification. For the printed note “鸡蛋 1 箱” and “燕麦奶 1 箱”, require two ready items and a USD 78 simulated receipt. Preserve OCR output beside the photo; real handwriting accuracy needs separate evaluation.
