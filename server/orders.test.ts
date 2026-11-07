@@ -105,6 +105,87 @@ test("unfamiliar lines remain unresolved and cannot be bought by blind confirmat
     store.close();
   }
 });
+test("a ZIP selects the best shipped offer and adds it without review", async () => {
+  const store = new Orders(":memory:");
+  try {
+    const draft = store.create({
+      text: "2 kg de lentejas verdes",
+      reviewLanguage: "en",
+    });
+    assert.equal(draft.canApprove, false);
+    const cart = await store.recommend(
+      draft.id,
+      { version: 1, zip: "10011" },
+      async () => ({
+        items: [
+          {
+            source: "2 kg de lentejas verdes",
+            offers: [
+              {
+                canCompare: true,
+                packs: 2,
+                priceMinor: 1895,
+                packQuantity: 4,
+                packUnit: "lb",
+                supplier: "Palouse Brand",
+                title: "Green Lentils - 4 lb",
+                productId: "green-lentils-4-lb",
+                url: "https://www.palousebrand.com/products/green-lentils-4-lb",
+              },
+              {
+                canCompare: true,
+                packs: 1,
+                priceMinor: 9000,
+                packQuantity: 18,
+                packUnit: "lb",
+                supplier: "Palouse Brand",
+                title: "Green Lentils - 18 lb",
+                productId: "green-lentils-18-lb",
+                url: "https://www.palousebrand.com/products/green-lentils-18-lb",
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    assert.equal(cart.deliveryZip, "10011");
+    assert.equal(cart.canApprove, true);
+    assert.equal(cart.lines[0].status, "ready");
+    assert.equal(cart.lines[0].label, "Green Lentils - 4 lb");
+    assert.equal(cart.lines[0].cases, 2);
+    assert.equal(cart.totalMinor, 3790);
+    const receipt = store.approve(draft.id, { version: cart.version });
+    assert.equal(receipt.lines[0].sku, "green-lentils-4-lb");
+    await assert.rejects(
+      () => store.recommend(draft.id, { version: cart.version, zip: "10011" }),
+      /draft_finalized/,
+    );
+  } finally {
+    store.close();
+  }
+});
+test("an unmatched line is left out of the cart", async () => {
+  const store = new Orders(":memory:");
+  try {
+    const draft = store.create({
+      text: "2 calendulas",
+      reviewLanguage: "en",
+    });
+    const cart = await store.recommend(
+      draft.id,
+      { version: 1, zip: "94110" },
+      async () => ({ items: [{ source: "2 calendulas", offers: [] }] }),
+    );
+    assert.equal(cart.lines[0].status, "skipped");
+    assert.equal(cart.canApprove, false);
+    await assert.rejects(
+      () => store.recommend(draft.id, { version: 1, zip: "abc" }),
+      /invalid_location/,
+    );
+  } finally {
+    store.close();
+  }
+});
 test("receipt survives reopening the database", () => {
   const dir = mkdtempSync(join(tmpdir(), "nova-store-"));
   const file = join(dir, "orders.sqlite");

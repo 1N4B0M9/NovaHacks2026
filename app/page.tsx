@@ -1,13 +1,11 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { copy, unitLabel } from "./components/copy";
-import { ReviewLine } from "./components/review-line";
 import { PhotoIntake } from "./components/photo-intake";
 import {
   money,
   type Draft,
   type Language,
-  type LineAction,
   type Order,
 } from "./components/order-types";
 
@@ -36,22 +34,15 @@ function isOrder(value: unknown): value is Order {
 export default function Home() {
   const [language, setLanguage] = useState<Language>("en");
   const [text, setText] = useState("");
+  const [zip, setZip] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [intakeMode, setIntakeMode] = useState<"extracted" | "manual" | null>(
     null,
   );
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [editingLine, setEditingLine] = useState<string | null>(null);
-  const onEditingChange = useCallback((id: string, editing: boolean) => {
-    setEditingLine((current) =>
-      editing ? id : current === id ? null : current,
-    );
-  }, []);
   const [order, setOrder] = useState<Order | null>(null);
-  const [pending, setPending] = useState<
-    "create" | "update" | "approve" | null
-  >(null);
+  const [pending, setPending] = useState<"create" | "approve" | null>(null);
   const [error, setError] = useState("");
   const [finalized, setFinalized] = useState(false);
   const busy = useRef(false);
@@ -67,14 +58,17 @@ export default function Home() {
     path: string,
     method: string,
     body: unknown,
-    operation: "create" | "update" | "approve",
+    operation: "create" | "approve",
   ) {
-    if (busy.current || (operation === "approve" && editingLine)) return;
+    if (busy.current) return;
     busy.current = true;
     setPending(operation);
     setError("");
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
+    const timeout = setTimeout(
+      () => controller.abort(),
+      operation === "create" ? 60000 : 15000,
+    );
     try {
       const response = await fetch(path, {
         method,
@@ -130,19 +124,9 @@ export default function Home() {
       setPending(null);
     }
   }
-  async function act(id: string, action: LineAction) {
-    if (!draft || finalized) return;
-    await request(
-      `/api/drafts/${encodeURIComponent(draft.id)}/lines/${encodeURIComponent(id)}`,
-      "PATCH",
-      { version: draft.version, ...action },
-      "update",
-    );
-  }
   function reset() {
     if (busy.current) return;
     setDraft(null);
-    setEditingLine(null);
     setText("");
     setPhoto(null);
     setIntakeMode(null);
@@ -155,11 +139,8 @@ export default function Home() {
     draft?.lines.filter((line) => line.status === "needs_review").length ?? 0;
   const included = draft?.lines.filter((line) => line.status === "ready") ?? [];
   const readyToApprove =
-    !!draft?.canApprove &&
-    !held &&
-    included.length > 0 &&
-    !finalized &&
-    !editingLine;
+    !!draft?.canApprove && !held && included.length > 0 && !finalized;
+  const destination = /^\d{5}(?:-\d{4})?$/.test(zip.trim());
   const step = order ? 3 : draft ? 2 : 1;
   return (
     <div className="app-shell" lang={language}>
@@ -211,11 +192,9 @@ export default function Home() {
         <div role="status" className="sr-only">
           {pending === "create"
             ? t.reviewing
-            : pending === "update"
-              ? t.saving
-              : pending === "approve"
-                ? t.approving
-                : ""}
+            : pending === "approve"
+              ? t.approving
+              : ""}
         </div>
         {!draft ? (
           <section className="intake-layout">
@@ -251,11 +230,15 @@ export default function Home() {
               className="intake-card"
               onSubmit={(event) => {
                 event.preventDefault();
-                if (text.trim() && !scanning)
+                if (text.trim() && destination && !scanning)
                   void request(
                     "/api/drafts",
                     "POST",
-                    { text: text.trim(), reviewLanguage: language },
+                    {
+                      text: text.trim(),
+                      reviewLanguage: language,
+                      zip: zip.trim(),
+                    },
                     "create",
                   );
               }}
@@ -277,6 +260,21 @@ export default function Home() {
                 <option value="en">English</option>
                 <option value="es">Español</option>
               </select>
+              <label className="field-label" htmlFor="zip-code">
+                {t.zip}
+              </label>
+              <input
+                id="zip-code"
+                inputMode="numeric"
+                autoComplete="postal-code"
+                value={zip}
+                placeholder="10011"
+                maxLength={10}
+                required
+                disabled={!!pending || scanning}
+                onChange={(event) => setZip(event.target.value)}
+              />
+              <p className="muted small">{t.zipHint}</p>
               <PhotoIntake
                 t={t}
                 photo={photo}
@@ -311,7 +309,9 @@ export default function Home() {
                   />
                   <button
                     className="button primary full-width"
-                    disabled={!!pending || scanning || !text.trim()}
+                    disabled={
+                      !!pending || scanning || !text.trim() || !destination
+                    }
                   >
                     {pending === "create" ? t.reviewing : t.review}
                     <span aria-hidden="true">→</span>
@@ -408,21 +408,37 @@ export default function Home() {
             )}
             <div className="review-layout">
               <div className="line-list" aria-busy={!!pending}>
-                {draft.lines.map((line) => (
-                  <ReviewLine
-                    key={`${line.id}-${draft.version}`}
-                    line={line}
-                    language={language}
-                    t={t}
-                    disabled={
-                      !!pending ||
-                      finalized ||
-                      (!!editingLine && editingLine !== line.id)
-                    }
-                    onEditingChange={onEditingChange}
-                    onAction={act}
-                  />
-                ))}
+                {draft.lines.map((line) => {
+                  const cost =
+                    line.status === "ready" &&
+                    line.priceMinor !== null &&
+                    line.cases !== null
+                      ? money(line.priceMinor * line.cases, language)
+                      : null;
+                  return (
+                    <article className={`line-card ${line.status}`} key={line.id}>
+                      <p className="field-label">{line.source}</p>
+                      {line.status === "ready" ? (
+                        <>
+                          <div className="line-heading">
+                            <h3>{line.label}</h3>
+                            {cost && <strong>{cost}</strong>}
+                          </div>
+                          <p className="purchase-description">
+                            {line.supplier ? `${line.supplier} · ` : ""}
+                            {line.cases} × {line.packSize}{" "}
+                            {unitLabel(line.packUnit, language)}
+                            {draft.deliveryZip
+                              ? ` · ${t.shipsTo} ${draft.deliveryZip}`
+                              : ""}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="muted small">{t.noMatch}</p>
+                      )}
+                    </article>
+                  );
+                })}
               </div>
               <aside className="summary-card" aria-label={t.summary}>
                 <p className="card-kicker">03 / {t.preview.toUpperCase()}</p>
@@ -437,9 +453,12 @@ export default function Home() {
                         <div>
                           <strong>{line.label ?? line.sku}</strong>
                           <small>
-                            {line.cases}{" "}
-                            {line.cases === 1 ? t.caseUnit : t.casesUnit} ·{" "}
-                            {line.sku}
+                            {line.supplier ? `${line.supplier} · ` : ""}
+                            {line.cases} × {line.packSize}{" "}
+                            {unitLabel(line.packUnit, language)}
+                            {draft.deliveryZip
+                              ? ` · ${t.shipsTo} ${draft.deliveryZip}`
+                              : ""}
                           </small>
                         </div>
                         <strong>
@@ -468,13 +487,6 @@ export default function Home() {
                         : included.length === 0
                           ? t.emptyHint
                           : t.reviewRequired}
-                  </p>
-                )}
-                {editingLine && (
-                  <p role="status" className="small">
-                    {language === "es"
-                      ? "Guarda o cancela la corrección antes de aprobar."
-                      : "Save or cancel the correction before approving."}
                   </p>
                 )}
                 <button
