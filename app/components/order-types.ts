@@ -1,5 +1,6 @@
 // Frontend view of the wire contract published by the backend owner in issue #3.
-export type Language = "en" | "es";
+import type { Language } from "../../lib/locale";
+export type { Language } from "../../lib/locale";
 export type Line = {
   match?: ReturnType<typeof import("../../server/match").matchIngredient>;
   id: string;
@@ -50,7 +51,10 @@ export type LineAction =
   | { action: "accept_pack"; sku: string; cases: number }
   | { action: "edit"; text: string };
 export const money = (value: number, language: Language) =>
-  new Intl.NumberFormat(language === "es" ? "es-US" : "en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(value / 100);
+  new Intl.NumberFormat(
+    language === "zh" ? "zh-CN" : language === "es" ? "es-US" : "en-US",
+    {
+      style: "currency",
+      currency: "USD",
+    },
+  ).format(value / 100);

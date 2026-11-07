@@ -1,3 +1,4 @@
+import { localize } from "../../lib/locale";
 import { OrderError } from "../order-error";
 import { isHeading } from "../match";
 import {
@@ -28,6 +29,18 @@ type AreaSearch = (
   signal: AbortSignal,
 ) => Promise<Offer[]>;
 const copy = {
+  zh: {
+    review: "请确认食材、数量或单位后再查询。",
+    empty: "所查询的商店没有匹配商品。",
+    failed: "供应商查询失败。",
+    timeout: "供应商查询超时。",
+    partial: "部分供应商未能查询。",
+    provisional: "这是查到的最低暂估商品小计，运费和最低订购量可能影响排序。",
+    best: "这是已核实的最低到货价。",
+    incomplete: "找到商品，但无法比较购买总价。",
+    coverage: "先查询美国商店；没有匹配商品时，再查公开商品信息。请向供应商确认配送条件与最终费用。",
+    web: "找到公开商品信息；商店价格和配送尚未核实。",
+  },
   en: {
     review: "Correct the ingredient, quantity or unit before searching.",
     empty:
@@ -67,7 +80,11 @@ export async function research(
   findOnWeb: WebSearch = searchWeb,
   findInArea: AreaSearch = searchArea,
 ) {
-  if (input.reviewLanguage !== "en" && input.reviewLanguage !== "es")
+  if (
+    input.reviewLanguage !== "en" &&
+    input.reviewLanguage !== "es" &&
+    input.reviewLanguage !== "zh"
+  )
     throw new OrderError(400, "invalid_language");
   if (
     typeof input.text !== "string" ||
@@ -128,7 +145,11 @@ export async function research(
         query,
         quantity: row.quantity,
         unit: row.unit as Unit,
-        display: { en: query, es: row.displayName.trim() },
+        display: {
+          en: query,
+          es: row.displayName.trim(),
+          zh: row.displayName.trim(),
+        },
       });
     }
   }
@@ -152,7 +173,12 @@ export async function research(
         ...base,
         ...blank,
         status: "heading",
-        message: language === "es" ? "Título de la receta." : "Recipe heading.",
+        message: localize(
+          language,
+          "Recipe heading.",
+          "Título de la receta.",
+          "食谱标题。",
+        ),
         stores: [],
       };
     if (!item)
@@ -269,9 +295,11 @@ export async function research(
         currencyDisplay: "code",
       }).format(first.knownCostMinor / 100);
       message +=
-        language === "es"
-          ? ` ${first.supplier}: ${first.packs} paquetes por ${amount} en costos conocidos para cubrir ${item.quantity} ${item.unit}.`
-          : ` ${first.supplier}: ${first.packs} packs at ${amount} in known costs cover ${item.quantity} ${item.unit}.`;
+        language === "zh"
+          ? ` ${first.supplier}：${first.packs} 包，已知费用 ${amount}。`
+          : language === "es"
+            ? ` ${first.supplier}: ${first.packs} paquetes por ${amount} en costos conocidos para cubrir ${item.quantity} ${item.unit}.`
+            : ` ${first.supplier}: ${first.packs} packs at ${amount} in known costs cover ${item.quantity} ${item.unit}.`;
     }
     return { ...base, ...ranked, status, message, stores };
   }
@@ -299,9 +327,12 @@ export async function research(
       typeof input.deliveryLocation === "string" &&
       input.deliveryLocation.trim()
         ? null
-        : language === "es"
-          ? "Indica el destino y confirma el envío con el proveedor."
-          : "Provide the destination and confirm delivery with the supplier.",
+        : localize(
+            language,
+            "Provide the destination and confirm delivery with the supplier.",
+            "Indica el destino y confirma el envío con el proveedor.",
+            "请填写目的地，并向供应商确认配送条件。",
+          ),
     coverage: t.coverage,
     items,
   };

@@ -1,4 +1,5 @@
 "use client";
+import { localize } from "../lib/locale";
 import { useEffect, useRef, useState } from "react";
 import { copy, unitLabel } from "./components/copy";
 import { PhotoIntake } from "./components/photo-intake";
@@ -155,7 +156,7 @@ export default function Home() {
         </a>
         <span className="topbar-note">KITCHEN → SUPPLIER</span>
         <span className="demo-tag">
-          {language === "es" ? "DEMOSTRACIÓN" : "DEMO WORKSPACE"}
+          {localize(language, "DEMO WORKSPACE", "DEMOSTRACIÓN", "演示")}
         </span>
       </header>
       <main>
@@ -259,6 +260,7 @@ export default function Home() {
               >
                 <option value="en">English</option>
                 <option value="es">Español</option>
+                <option value="zh">简体中文</option>
               </select>
               <label className="field-label" htmlFor="zip-code">
                 {t.zip}
@@ -276,6 +278,7 @@ export default function Home() {
               />
               <p className="muted small">{t.zipHint}</p>
               <PhotoIntake
+                language={language}
                 t={t}
                 photo={photo}
                 disabled={!!pending}
@@ -397,9 +400,12 @@ export default function Home() {
             {!!draft.headings?.length && (
               <div className="recipe-headings">
                 <p className="field-label">
-                  {language === "es"
-                    ? "Título de la receta · No se compra"
-                    : "Recipe heading · Not a purchase item"}
+                  {localize(
+                    language,
+                    "Recipe heading · Not a purchase item",
+                    "Título de la receta · No se compra",
+                    "食谱标题 · 不计入订单",
+                  )}
                 </p>
                 {draft.headings.map((title, index) => (
                   <p key={index}>{title}</p>

@@ -44,6 +44,8 @@ Each item's `bestCandidateId` is nullable. A winner requires a unique compatible
 
 Explicit fractional `each` demand is accepted (for example 0.5 each onion). Actual packs are rounded up and obey known supplier minimums/increments/maximums. Null sales terms are labeled unknown. Interpretation buttons prefill the existing `action:edit` form; save uses the current draft version and preserves original source. No new order action or external SKU import exists.
 
+## Chinese demo (#28)
+Drafts and research accept reviewLanguage `zh` for Simplified Chinese UI and explanations. `/api/transcribe` accepts optional `engine` (`openrouter`, the default, or `local-zh`, a server-local Simplified Chinese OCR worker). Both return editable `{text}`. Local failure or a busy worker returns 503; no silent handoff to an external service. Supplier titles, prices and IDs remain unchanged.
 ## Public product listings · issue #26
 
 When storefront ranking returns no compatible offer, the same research response may include Open Food Facts listings. `evidenceKind` adds `web_search`. Those offers use supplier `Open Food Facts`, a numeric `productId`, and a product URL on `world.openfoodfacts.org`. `priceMinor`, currency, availability, shipping, fees, and location eligibility are null. `packQuantity` and `packUnit` are set only from an unambiguous quantity string on the listing. `bestCandidateId` stays null unless a storefront offer independently has a unique verified delivered cost. The stores array includes Open Food Facts only when that lookup runs. A storefront match does not call the index. Empty or failed index results do not by themselves turn a successful empty store check into a match, and they do not turn an all-store timeout into a successful search.

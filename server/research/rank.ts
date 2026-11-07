@@ -1,3 +1,4 @@
+import { localize } from "../../lib/locale";
 import {
   unitScale,
   type ResearchIngredient,
@@ -32,7 +33,6 @@ export function compareOffer(
   offer: Offer,
   language: Language,
 ) {
-  const es = language === "es";
   const quantity = offer.packQuantity;
   const scale = offer.packUnit && unitScale[offer.packUnit];
   const [dimension, factor] = item.unit ? unitScale[item.unit] : [null, 1];
@@ -92,49 +92,70 @@ export function compareOffer(
   const caveats: string[] = [];
   if (offer.evidenceKind === "web_search")
     caveats.push(
-      es
-        ? "Ficha pública. El precio y la entrega no están verificados."
-        : "Public product listing. Price and delivery are not verified.",
+      localize(language, "Public product listing. Price and delivery are not verified.", "Ficha pública. El precio y la entrega no están verificados.", "公开商品信息。价格与配送尚未核实。"),
     );
   if (assessment.compatibility === "needs_confirmation")
     caveats.push(
-      es
-        ? "Confirma la variedad y los detalles del producto."
-        : "Confirm the variety and product attributes.",
+      localize(
+        language,
+        "Confirm the variety and product attributes.",
+        "Confirma la variedad y los detalles del producto.",
+        "请确认品种和商品属性。",
+      ),
     );
   if (exceedsMaximum)
     caveats.push(
-      es
-        ? "La cantidad necesaria supera el máximo del proveedor."
-        : "Required quantity exceeds the supplier maximum.",
+      localize(
+        language,
+        "Required quantity exceeds the supplier maximum.",
+        "La cantidad necesaria supera el máximo del proveedor.",
+        "所需数量超过供应商限额。",
+      ),
     );
   if (!offer.currency || offer.currency !== "USD")
-    caveats.push(es ? "Moneda no comparable." : "Currency not comparable.");
+    caveats.push(
+      localize(
+        language,
+        "Currency not comparable.",
+        "Moneda no comparable.",
+        "币种无法比较。",
+      ),
+    );
   if (pack === null || offer.priceMinor === null)
     caveats.push(
-      es
-        ? "Precio o tamaño comparable sin confirmar."
-        : "Comparable pack or price unconfirmed.",
+      localize(
+        language,
+        "Comparable pack or price unconfirmed.",
+        "Precio o tamaño comparable sin confirmar.",
+        "可比较的规格或价格待确认。",
+      ),
     );
   if (offer.available !== true)
     caveats.push(
       offer.available === false
-        ? es
-          ? "Agotado."
-          : "Out of stock."
-        : es
-          ? "Existencias desconocidas."
-          : "Stock unknown.",
+        ? localize(language, "Out of stock.", "Agotado.", "已售罄。")
+        : localize(
+            language,
+            "Stock unknown.",
+            "Existencias desconocidas.",
+            "库存未知。",
+          ),
     );
   if (offer.locationEligible !== true)
     caveats.push(
       offer.locationEligible === false
-        ? es
-          ? "Entrega no disponible."
-          : "Delivery ineligible."
-        : es
-          ? "Entrega al destino sin confirmar."
-          : "Delivery eligibility unknown.",
+        ? localize(
+            language,
+            "Delivery ineligible.",
+            "Entrega no disponible.",
+            "不支持送达。",
+          )
+        : localize(
+            language,
+            "Delivery eligibility unknown.",
+            "Entrega al destino sin confirmar.",
+            "能否送达尚未确认。",
+          ),
     );
   if (
     offer.shippingMinor === null ||
@@ -143,9 +164,12 @@ export function compareOffer(
     offer.minimumSpendMinor === null
   )
     caveats.push(
-      es
-        ? "Envío, cargos o pedido mínimo sin confirmar."
-        : "Shipping, fees or minimum order unconfirmed.",
+      localize(
+        language,
+        "Shipping, fees or minimum order unconfirmed.",
+        "Envío, cargos o pedido mínimo sin confirmar.",
+        "运费、附加费或最低订购量尚未确认。",
+      ),
     );
   return {
     ...offer,

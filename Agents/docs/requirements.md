@@ -39,6 +39,9 @@ The owner authorized candidate discovery for small recipe amounts. Preserve frac
 
 The UI keeps the simulated-order catalog subordinate, never showing its empty supplier card as a discovery failure. Interpretation selection opens an editable correction that must be saved; source words and version checks remain intact. Block approval during unsaved corrections. Research and external product links never mutate the order.
 
+## Chinese test order
+
+The merchant can choose Simplified Chinese review and either online transcription or server-local Simplified Chinese OCR. For the printed note “鸡蛋 1 箱” and “燕麦奶 1 箱”, require two ready items and a USD 78 simulated receipt. Preserve OCR output beside the photo; real handwriting accuracy needs separate evaluation.
 ## Public product search · issue #26
 
 When the checked storefronts have no compatible listing, research may consult the public Open Food Facts product index for the English ingredient name. Show the product title, evidence URL, observation time, and a pack size only when the listing states one. Price, stock, shipping, and delivery eligibility stay unknown. These listings are not a best delivered price and cannot become a simulated-order SKU. A failed or empty index keeps the existing no-result and provider-failure outcomes.

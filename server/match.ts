@@ -1,7 +1,8 @@
 import catalog from "./catalog.json";
 import vocabulary from "./vocabulary.json";
 
-export type Language = "en" | "es";
+import type { Language } from "../lib/locale";
+export type { Language } from "../lib/locale";
 export const unitScale = {
   g: ["mass", 1],
   kg: ["mass", 1000],
@@ -28,6 +29,7 @@ export type Ingredient = {
 export const fold = (s: string) =>
   s
     .normalize("NFKC")
+    .replace(/(\p{Script=Han})\s+(?=\p{Script=Han})/gu, "$1")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
