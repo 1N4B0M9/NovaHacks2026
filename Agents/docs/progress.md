@@ -1,27 +1,13 @@
 # Current project status
 
 **PHASE: PLANNING**
+
 **Human-approved MVP?** No
+
 **Human-approved architecture?** No
-**Latest checkpoint:** Not started
 
-## Completed
-- Created initial planning documentation template.
+The two independent Codex council roles recommended supplier ordering after cross-examination. The owner has directed planning toward immigrant restaurant operators. The working brief focuses on merchants whose kitchen language and supplier catalog language differ.
 
-## In progress
-- Planning council setup.
+[Issue #1](https://github.com/1N4B0M9/NovaHacks2026/issues/1) is the partner discussion. The revised brief, requirements, architecture and API contract are drafts. The opening slides and council synthesis establish event context; merchant validation, language pair, app credentials, stack and team ownership remain open.
 
-## Blockers / questions for owner
-- Need actual event brief and judging criteria.
-
-## Decisions pending approval
-- Idea, MVP, stack, agent task ownership.
-
-## Next two actions
-1. Complete `docs/brief.md`.
-2. Collect independent Codex and Cursor proposals.
-
-## Timeline / milestone log
-| When | Agent / human | Finding or delivery | Verified evidence | Updated docs | Next |
-|---|---|---|---|---|---|
-| Initial setup | Human | Planning protocol initialized | Repo files | AGENTS.md + docs | Ideation |
+**Next:** Both owners review the problem statement and egg-case example. Select a language pair someone can validate, agree on the skip behavior and record MVP/architecture approval before implementation.
