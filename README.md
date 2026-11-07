@@ -1,5 +1,7 @@
 # NOVA restaurant supply ordering
 
+Start with the [API test walkthrough](Agents/docs/test-api.md) and [shared feature roadmap](Agents/docs/roadmap.md).
+
 Use Node.js 24 or newer. Run `npm ci`, then `npm run dev`. Backend routes live under `/api`; the partner supplies the merchant-facing page. Run `npm test`, `npm run typecheck`, and `npm run build` for verification.
 
 The local demo saves drafts to `data/orders.sqlite`. Override with `NOVA_DB_PATH` if needed. All prices and catalog entries are illustrative. Orders remain simulated.
