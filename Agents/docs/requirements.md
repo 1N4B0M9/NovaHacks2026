@@ -38,3 +38,7 @@ Display ingredient identity independently of local catalog availability. Preserv
 The owner authorized candidate discovery for small recipe amounts. Preserve fractional demand separately from whole purchasable packs. Known identities may be browsed while quantity/unit is unresolved; quantity comparison remains unavailable. Present up to five evidence-backed products and up to three interpretation suggestions. Product variants/brands needing confirmation remain labeled; exclude known incompatible forms and ingredient constraints. Show observed pack price and size even without a supported conversion. Do not infer density or count-to-weight conversion.
 
 The UI keeps the simulated-order catalog subordinate, never showing its empty supplier card as a discovery failure. Interpretation selection opens an editable correction that must be saved; source words and version checks remain intact. Block approval during unsaved corrections. Research and external product links never mutate the order.
+
+## Chinese test order
+
+The merchant can choose Simplified Chinese review and either online transcription or server-local Simplified Chinese OCR. For the printed note “鸡蛋 1 箱” and “燕麦奶 1 箱”, require two ready items and a USD 78 simulated receipt. Preserve OCR output beside the photo; real handwriting accuracy needs separate evaluation.

@@ -1,4 +1,5 @@
 "use client";
+import { localize } from "../lib/locale";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { copy, unitLabel } from "./components/copy";
 import { ReviewLine } from "./components/review-line";
@@ -174,7 +175,7 @@ export default function Home() {
         </a>
         <span className="topbar-note">KITCHEN → SUPPLIER</span>
         <span className="demo-tag">
-          {language === "es" ? "DEMOSTRACIÓN" : "DEMO WORKSPACE"}
+          {localize(language, "DEMO WORKSPACE", "DEMOSTRACIÓN", "演示")}
         </span>
       </header>
       <main>
@@ -276,8 +277,10 @@ export default function Home() {
               >
                 <option value="en">English</option>
                 <option value="es">Español</option>
+                <option value="zh">简体中文</option>
               </select>
               <PhotoIntake
+                language={language}
                 t={t}
                 photo={photo}
                 disabled={!!pending}
@@ -397,9 +400,12 @@ export default function Home() {
             {!!draft.headings?.length && (
               <div className="recipe-headings">
                 <p className="field-label">
-                  {language === "es"
-                    ? "Título de la receta · No se compra"
-                    : "Recipe heading · Not a purchase item"}
+                  {localize(
+                    language,
+                    "Recipe heading · Not a purchase item",
+                    "Título de la receta · No se compra",
+                    "食谱标题 · 不计入订单",
+                  )}
                 </p>
                 {draft.headings.map((title, index) => (
                   <p key={index}>{title}</p>
@@ -472,9 +478,12 @@ export default function Home() {
                 )}
                 {editingLine && (
                   <p role="status" className="small">
-                    {language === "es"
-                      ? "Guarda o cancela la corrección antes de aprobar."
-                      : "Save or cancel the correction before approving."}
+                    {localize(
+                      language,
+                      "Save or cancel the correction before approving.",
+                      "Guarda o cancela la corrección antes de aprobar.",
+                      "请先保存或取消修改，再确认订单。",
+                    )}
                   </p>
                 )}
                 <button

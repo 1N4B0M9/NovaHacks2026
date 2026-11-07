@@ -8,7 +8,7 @@ import { OrderError } from "./order-error";
 export { OrderError } from "./order-error";
 
 type Input = Record<string, unknown>;
-type Locale = "en" | "es";
+import type { Language as Locale } from "../lib/locale";
 type Draft = {
   id: string;
   version: number;
@@ -57,7 +57,11 @@ export class Orders {
   }
   create(input: Input) {
     const text = requiredText(input.text, 5000);
-    if (input.reviewLanguage !== "en" && input.reviewLanguage !== "es")
+    if (
+      input.reviewLanguage !== "en" &&
+      input.reviewLanguage !== "es" &&
+      input.reviewLanguage !== "zh"
+    )
       throw new OrderError(400, "invalid_language");
     // Decimal commas are ambiguous in bilingual notes. Keep those lines intact for review.
     const sources = text

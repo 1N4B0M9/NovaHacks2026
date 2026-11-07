@@ -1,4 +1,5 @@
 "use client";
+import { localize } from "../../lib/locale";
 import { useEffect, useState } from "react";
 import {
   money,
@@ -100,9 +101,12 @@ export function ReviewLine({
           </span>
           <div>
             <p className="field-label">
-              {language === "es"
-                ? "Catálogo del pedido simulado"
-                : "Simulated-order catalog"}
+              {localize(
+                language,
+                "Simulated-order catalog",
+                "Catálogo del pedido simulado",
+                "模拟订单商品目录",
+              )}
             </p>
             <h3>{line.label ?? t.noMatch}</h3>
           </div>
@@ -141,9 +145,12 @@ export function ReviewLine({
       {line.status === "needs_review" && (
         <p className="reason">
           {line.match?.purchaseStatus === "no_local_sku"
-            ? language === "es"
-              ? "Ingrediente reconocido; no está en el catálogo del pedido simulado."
-              : "Ingredient recognized; not in the simulated order catalog."
+            ? localize(
+                language,
+                "Ingredient recognized; not in the simulated order catalog.",
+                "Ingrediente reconocido; no está en el catálogo del pedido simulado.",
+                "已识别该食材；模拟订单目录中没有对应商品。",
+              )
             : line.reason
               ? t.reasons[line.reason]
               : t.reviewRequired}

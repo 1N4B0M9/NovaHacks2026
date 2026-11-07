@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import type { Copy } from "./copy";
+import { localize, type Language } from "../../lib/locale";
 
 // Resize on-device before transmission; the backend caps encoded input at 4M characters.
 async function preparePhoto(file: File): Promise<string> {
@@ -37,6 +38,7 @@ async function preparePhoto(file: File): Promise<string> {
 }
 
 export function PhotoIntake({
+  language,
   t,
   photo,
   disabled,
@@ -46,6 +48,7 @@ export function PhotoIntake({
   onManual,
   onBusy,
 }: {
+  language: Language;
   t: Copy;
   photo: string | null;
   disabled: boolean;
@@ -59,6 +62,7 @@ export function PhotoIntake({
   const upload = useRef<HTMLInputElement>(null);
   const busyRef = useRef(false);
   const [reading, setReading] = useState(false);
+  const [engine, setEngine] = useState("openrouter");
   const [error, setError] = useState<"image" | "transcription" | null>(null);
   async function scan(file: File) {
     if (busyRef.current) return;
@@ -79,7 +83,7 @@ export function PhotoIntake({
       const response = await fetch("/api/transcribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image }),
+        body: JSON.stringify({ image, engine }),
         signal: controller.signal,
       });
       const result = await response.json().catch(() => null);
@@ -102,6 +106,37 @@ export function PhotoIntake({
   }
   return (
     <div className="photo-intake">
+      <label htmlFor="note-reader" className="field-label">
+        {localize(
+          language,
+          "Text recognition",
+          "Reconocimiento de texto",
+          "文字识别方式",
+        )}
+      </label>
+      <select
+        id="note-reader"
+        value={engine}
+        disabled={disabled || reading}
+        onChange={(event) => setEngine(event.target.value)}
+      >
+        <option value="openrouter">
+          {localize(
+            language,
+            "Online · multilingual",
+            "En línea · multilingüe",
+            "在线识别 · 多语言",
+          )}
+        </option>
+        <option value="local-zh">
+          {localize(
+            language,
+            "Local OCR · Simplified Chinese",
+            "OCR local · chino simplificado",
+            "本地识别 · 简体中文",
+          )}
+        </option>
+      </select>
       <input
         ref={camera}
         id="camera-note"
@@ -182,7 +217,16 @@ export function PhotoIntake({
           {photo ? t.replacePhoto : t.uploadPhoto}
         </button>
       </div>
-      <p className="photo-privacy">{t.photoPrivacy}</p>
+      <p className="photo-privacy">
+        {engine === "local-zh"
+          ? localize(
+              language,
+              "This server reads your photo locally. No external recognition service receives it.",
+              "Este servidor lee la foto localmente, sin enviarla a un servicio externo.",
+              "照片由本应用服务器本地识别，不会发送给外部识别服务。",
+            )
+          : t.photoPrivacy}
+      </p>
       {reading && (
         <p className="scan-status" role="status">
           <span className="scan-dot" />
