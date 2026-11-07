@@ -3,6 +3,7 @@
 **Issue:** https://github.com/1N4B0M9/NovaHacks2026/issues/3
 **Worker:** Partner / Codex
 **Branch:** `frontend-review`
+**PR:** https://github.com/1N4B0M9/NovaHacks2026/pull/9
 **Status:** Ready for lead review; live transcription provider smoke check remains external
 
 ## Authorization and scope
@@ -31,7 +32,7 @@ Tested the frontend overlaid onto backend PR [#7](https://github.com/1N4B0M9/Nov
 - **9 real-backend browser checks passed**, on both development and production builds. Covers $24 milk-only receipt, $78 eggs/milk receipt, idempotent approval retry, empty/unknown blocking, edit invalidation, missing quantity, Spanish UI, and responsive layout.
 - **Important:** all 8 image submissions in the real-backend suite returned `503 transcription_unavailable`; those runs exercised the explicit manual-transcription fallback. The 12 successful transcription responses in the fixture suite were mocked. Live handwriting recognition and accuracy are **not verified**.
 - Integrated `npm run typecheck`: passed.
-- Integrated `npm test`: **5 backend regression tests passed** with Node 24.22.1. The initial sandbox run hit the runner's IPC restriction; the permitted rerun passed unchanged.
+- Integrated `npm test`: **5 backend regression tests passed** at `58559d1`; after updating the detached checkout to `24ee7f8`, **all 11 backend/parser/HTTP tests passed** with Node 24.22.1. The initial sandbox run hit the runner's IPC restriction; the permitted rerun passed unchanged.
 - Integrated `npm run build`: passed with Next.js 16.4.5, including TypeScript and production route generation.
 - `git diff --check`: passed. No uncaught browser/hydration errors in the final suites.
 - Visually inspected mobile scan, transcription, review and receipt plus desktop intake/review. No horizontal overflow at 390px and 1440px. Native camera hardware was not tested; file upload and capture-control wiring were exercised in Chromium.
@@ -72,4 +73,4 @@ This host supplied Playwright through `PLAYWRIGHT_MODULE=/Users/nathanmorelli/.c
 
 ## Updated lead handoff
 
-The lead requested plain branch naming and a shared feature checklist after initial PR #8 was opened. The frontend branch was renamed to `frontend-review`; #8 is superseded by the replacement PR linked in issue #3. The shared roadmap was copied from backend revision `24ee7f8` and only the frontend section was edited; backend and integration rows were preserved. The requirements amendment quotes the owner-authorized photo-first correction. Backend runtime/API source is unchanged between the tested `58559d1` and `24ee7f8`; the latter adds regression tests and documentation.
+The lead requested plain branch naming and a shared feature checklist after initial PR #8 was opened. The frontend branch was renamed to `frontend-review`; #8 is superseded by [PR #9](https://github.com/1N4B0M9/NovaHacks2026/pull/9). The shared roadmap was copied from backend revision `24ee7f8` and only the frontend section was edited; backend and integration rows were preserved. The requirements amendment quotes the owner-authorized photo-first correction. Backend runtime/API source is unchanged between the tested `58559d1` and `24ee7f8`; the latter adds regression tests and documentation.
