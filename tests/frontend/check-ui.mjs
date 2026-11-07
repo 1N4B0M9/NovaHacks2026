@@ -32,6 +32,8 @@ try {
       i % 2 ? "燕麦奶 1 箱" : "鸡蛋 1 箱",
     );
     let sentScans = 0;
+    let releaseSearch;
+    const searchVisible = new Promise((resolve) => { releaseSearch = resolve; });
     if (!live) {
       await page.route("**/api/transcribe", (r) => {
         sentScans++;
@@ -47,33 +49,35 @@ try {
           },
         });
       });
-      await page.route("**/api/drafts", async (r) => {
+      await page.route("**/api/drafts/search", async (r) => {
         const input = r.request().postDataJSON();
         assert.equal(input.zip, "10011");
         assert.equal(input.reviewLanguage, "zh");
         const submitted = input.text.split("\n");
         assert.equal(submitted[0], "鸡蛋 2 箱");
+        await searchVisible;
+        const draft = {
+          id: "fixture",
+          version: 1,
+          canApprove: true,
+          deliveryZip: "10011",
+          totalMinor: submitted.length * 2400,
+          lines: submitted.map((source, i) => ({
+            id: String(i),
+            sku: "fixture-" + i,
+            label: "Supplier product " + i,
+            source,
+            text: source,
+            status: "ready",
+            packSize: 6,
+            packUnit: "each",
+            priceMinor: 2400,
+            cases: 1,
+          })),
+        };
         await r.fulfill({
-          status: 201,
-          json: {
-            id: "fixture",
-            version: 1,
-            canApprove: true,
-            deliveryZip: "10011",
-            totalMinor: submitted.length * 2400,
-            lines: submitted.map((source, i) => ({
-              id: String(i),
-              sku: "fixture-" + i,
-              label: "Supplier product " + i,
-              source,
-              text: source,
-              status: "ready",
-              packSize: 6,
-              packUnit: "each",
-              priceMinor: 2400,
-              cases: 1,
-            })),
-          },
+          contentType: "application/x-ndjson",
+          body: JSON.stringify({ type: "draft", draft }) + "\n",
         });
       });
     }
@@ -101,7 +105,12 @@ try {
     }
     await page.screenshot({ path: resolve(output, `list-${width}.png`) });
     await page.getByRole("button", { name: "加入购物车" }).click();
-    await page.locator(".cart-item").first().waitFor();
+    if (!live) {
+      await page.locator(".search-row").first().waitFor();
+      assert.equal(await page.locator(".search-row").count(), lines.length);
+      releaseSearch();
+    }
+    await page.locator(".cart-item:not(.search-row)").first().waitFor();
     assert.equal(await page.locator(".cart-item").count(), lines.length);
     if (!live)
       assert.ok(
@@ -145,10 +154,11 @@ try {
         .click();
       await page.locator(".parsed-row input").fill("1 case eggs");
       await page.locator("#zip-code").fill("10011");
-      await page.unroute("**/api/drafts");
-      await page.route("**/api/drafts", (route) => route.abort());
+      await page.unroute("**/api/drafts/search");
+      await page.route("**/api/drafts/search", (route) => route.abort());
       await page.getByRole("button", { name: "Add to cart" }).click();
       await page.locator(".error-banner").waitFor();
+      await page.getByRole("button", { name: "Back to the note" }).click();
       assert.equal(
         await page.locator(".parsed-row input").inputValue(),
         "1 case eggs",

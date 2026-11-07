@@ -351,6 +351,57 @@ test("a ZIP searches the web for a nearby grocery when stores have no comparable
   assert.equal(result.items[0].offers[0].supplier, "Whole Foods Market");
   assert.equal(result.items[0].stores.at(-1)?.supplier, "Nearby web search");
 });
+test("each order's buyer agent chooses one searched listing", async () => {
+  const result = await research(
+    { text: "un pollo entero", reviewLanguage: "es", deliveryLocation: "10011" },
+    async () => [],
+    undefined,
+    async () => [],
+    async () => [
+      {
+        supplier: "Whole Foods Market",
+        title: "Whole Chicken",
+        productId: "nearby-chicken",
+        url: "https://www.wholefoodsmarket.com/grocery/product/nearby-chicken",
+        evidenceUrl: "https://www.wholefoodsmarket.com/search",
+        evidenceKind: "web_search",
+        retrievedAt: "2026-11-07T20:00:00.000Z",
+        priceMinor: 349,
+        currency: "USD",
+        packQuantity: 1,
+        packUnit: "lb",
+        available: true,
+        shippingMinor: null,
+        feesMinor: null,
+        minimumPacks: 1,
+        minimumSpendMinor: 0,
+        locationEligible: true,
+      },
+    ],
+    async () => ({
+      supplier: "Whole Foods Market · Union Square",
+      title: "Organic Whole Chicken",
+      productId: "agent-chicken",
+      url: "https://www.wholefoodsmarket.com/grocery/product/agent-chicken",
+      evidenceUrl: "https://www.wholefoodsmarket.com/search",
+      evidenceKind: "web_search",
+      retrievedAt: "2026-11-07T20:00:00.000Z",
+      priceMinor: 449,
+      currency: "USD",
+      packQuantity: 1,
+      packUnit: "lb",
+      available: true,
+      shippingMinor: null,
+      feesMinor: null,
+      minimumPacks: 1,
+      minimumSpendMinor: 0,
+      locationEligible: true,
+    }),
+  );
+  assert.equal(result.items[0].offers.length, 1);
+  assert.equal(result.items[0].offers[0].productId, "agent-chicken");
+  assert.equal(result.items[0].stores.at(-1)?.supplier, "Buyer agent");
+});
 test("a storefront match skips the public product index", async () => {
   let calls = 0;
   const result = await research(
@@ -435,6 +486,24 @@ test("area search keeps a nearby grocery product and drops guides", () => {
     ).length,
     0,
   );
+});
+test("search reports each line as it starts and finishes", async () => {
+  const events: string[] = [];
+  await research(
+    {
+      text: "1 lb green lentils",
+      reviewLanguage: "en",
+      onLine: (event: { phase: string; index: number }) => {
+        events.push(`${event.phase}:${event.index}`);
+      },
+    },
+    async () => [],
+    1000,
+    async () => [],
+    async () => [],
+    null,
+  );
+  assert.deepEqual(events, ["start:0", "done:0"]);
 });
 test("chili plurals match and salsa does not count as the herb", () => {
   assert.equal(matchesTitle("green chili", "Green chilies"), true);
