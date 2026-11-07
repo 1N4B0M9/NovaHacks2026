@@ -536,6 +536,11 @@ select {
   padding: 25px;
   min-width: 0;
 }
+.line-card h3 a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .line-card.needs_review {
   border-color: var(--accent);
 }

@@ -9,6 +9,7 @@ import {
   type Language,
 } from "./ingredient";
 import { rank, type Offer } from "./rank";
+import { searchArea } from "./area";
 import { searchStore, suppliers } from "./storefront";
 import { searchWeb } from "./web";
 
@@ -19,6 +20,11 @@ type Search = (
 ) => Promise<Offer[]>;
 type WebSearch = (
   item: ResearchIngredient,
+  signal: AbortSignal,
+) => Promise<Offer[]>;
+type AreaSearch = (
+  item: ResearchIngredient,
+  zip: string,
   signal: AbortSignal,
 ) => Promise<Offer[]>;
 const copy = {
@@ -59,6 +65,7 @@ export async function research(
   search: Search = searchStore,
   timeoutMs = 6500,
   findOnWeb: WebSearch = searchWeb,
+  findInArea: AreaSearch = searchArea,
 ) {
   if (input.reviewLanguage !== "en" && input.reviewLanguage !== "es")
     throw new OrderError(400, "invalid_language");
@@ -82,6 +89,11 @@ export async function research(
     throw new OrderError(400, "invalid_line_count");
   const language: Language = input.reviewLanguage,
     t = copy[language];
+  const deliveryZip =
+    typeof input.deliveryLocation === "string" &&
+    /^\d{5}(?:-\d{4})?$/.test(input.deliveryLocation.trim())
+      ? input.deliveryLocation.trim()
+      : "";
   // Explicit merchant corrections also support ingredients outside the seed glossary.
   const corrected = new Map<number, ResearchIngredient>();
   if (input.corrections !== undefined) {
@@ -152,6 +164,15 @@ export async function research(
         stores: [],
       };
     const signal = AbortSignal.timeout(timeoutMs);
+    const areaTask = deliveryZip
+      ? findInArea(item, deliveryZip, signal).then(
+          (offers) => ({ status: "ok" as const, offers }),
+          () => ({
+            status: (signal.aborted ? "timeout" : "failed") as "timeout" | "failed",
+            offers: [] as Offer[],
+          }),
+        )
+      : Promise.resolve({ status: "skipped" as const, offers: [] as Offer[] });
     const observed = await Promise.all(
       suppliers.map(async (store) => {
         try {
@@ -170,15 +191,29 @@ export async function research(
       }),
     );
     const storeOffers = observed.flatMap((x) => x.offers);
+    const area = await areaTask;
+    const storeRanked = rank(item, storeOffers, language);
     let webStatus: "ok" | "failed" | "timeout" | "skipped" = "skipped";
+    let webSupplier = "Open Food Facts";
     let webOffers: Offer[] = [];
-    if (!rank(item, storeOffers, language).offers.length) {
+    if (deliveryZip && !storeRanked.offers.some((offer) => offer.canCompare)) {
+      webOffers = area.offers;
+      webStatus = area.status;
+      webSupplier = "Nearby web search";
+    }
+    if (
+      !webOffers.length &&
+      !storeRanked.offers.some((offer) => offer.canCompare) &&
+      (deliveryZip || !storeRanked.offers.length)
+    ) {
       const webSignal = AbortSignal.timeout(Math.min(4000, timeoutMs));
       try {
         webOffers = await findOnWeb(item, webSignal);
         webStatus = "ok";
+        webSupplier = "Open Food Facts";
       } catch {
         webStatus = webSignal.aborted ? "timeout" : "failed";
+        webSupplier = "Open Food Facts";
       }
     }
     const stores = [
@@ -187,7 +222,7 @@ export async function research(
         ? []
         : [
             {
-              supplier: "Open Food Facts",
+              supplier: webSupplier,
               status: webStatus === "ok" ? ("ok" as const) : webStatus,
             },
           ]),

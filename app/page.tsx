@@ -421,15 +421,31 @@ export default function Home() {
                       {line.status === "ready" ? (
                         <>
                           <div className="line-heading">
-                            <h3>{line.label}</h3>
-                            {cost && <strong>{cost}</strong>}
+                            <h3>
+                              {line.productUrl ? (
+                                <a
+                                  href={line.productUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {line.label}
+                                </a>
+                              ) : (
+                                line.label
+                              )}
+                            </h3>
+                            {cost ? <strong>{cost}</strong> : null}
                           </div>
                           <p className="purchase-description">
                             {line.supplier ? `${line.supplier} · ` : ""}
-                            {line.cases} × {line.packSize}{" "}
-                            {unitLabel(line.packUnit, language)}
+                            {line.packSize != null &&
+                            line.packUnit &&
+                            !(line.packSize === 1 && line.packUnit === "each")
+                              ? `${line.cases} × ${line.packSize} ${unitLabel(line.packUnit, language)} · `
+                              : ""}
+                            {line.priceMinor == null ? `${t.priceAtStore} · ` : ""}
                             {draft.deliveryZip
-                              ? ` · ${t.shipsTo} ${draft.deliveryZip}`
+                              ? `${t.shipsTo} ${draft.deliveryZip}`
                               : ""}
                           </p>
                         </>
@@ -454,10 +470,13 @@ export default function Home() {
                           <strong>{line.label ?? line.sku}</strong>
                           <small>
                             {line.supplier ? `${line.supplier} · ` : ""}
-                            {line.cases} × {line.packSize}{" "}
-                            {unitLabel(line.packUnit, language)}
+                            {line.packSize != null &&
+                            line.packUnit &&
+                            !(line.packSize === 1 && line.packUnit === "each")
+                              ? `${line.cases} × ${line.packSize} ${unitLabel(line.packUnit, language)} · `
+                              : ""}
                             {draft.deliveryZip
-                              ? ` · ${t.shipsTo} ${draft.deliveryZip}`
+                              ? `${t.shipsTo} ${draft.deliveryZip}`
                               : ""}
                           </small>
                         </div>
@@ -476,7 +495,23 @@ export default function Home() {
                   aria-atomic="true"
                 >
                   <span>{held ? t.subtotal : t.total}</span>
-                  <strong>{money(draft.totalMinor, language)}</strong>
+                  <strong>
+                    {included.some(
+                      (line) => line.priceMinor !== null && line.cases !== null,
+                    )
+                      ? money(
+                          included.reduce(
+                            (sum, line) =>
+                              sum +
+                              (line.priceMinor != null && line.cases != null
+                                ? line.priceMinor * line.cases
+                                : 0),
+                            0,
+                          ),
+                          language,
+                        )
+                      : "—"}
+                  </strong>
                 </div>
                 {!readyToApprove && (
                   <p className="approval-hint">
