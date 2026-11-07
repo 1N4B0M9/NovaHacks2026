@@ -1,8 +1,8 @@
 # Merchant ordering MVP
 
-**Draft for discussion · [Issue #1](https://github.com/1N4B0M9/NovaHacks2026/issues/1)**
+**Approved MVP · [Issue #1](https://github.com/1N4B0M9/NovaHacks2026/issues/1)**
 
-One merchant, one supplier, one verified demo language pair, and a small catalog with fixed SKUs, pack sizes and prices. A merchant can photograph a closing list or paste text, choose their review language and compare their original words with supplier-ready lines.
+One merchant, one supplier and one demo language pair. Use English and illustrative Spanish for initial fixtures. Use fluent-reviewed translations when available and label unreviewed translations illustrative. Typed or pasted input is required; photo input is optional. Preserve original words beside supplier-ready lines.
 
 ## Acceptance examples
 
@@ -13,5 +13,7 @@ One merchant, one supplier, one verified demo language pair, and a small catalog
 - Test two unfamiliar notes, including a mixed-language alias and a unit ambiguity. If photo extraction fails, the user can paste or correct text and complete the same workflow.
 
 ## Boundaries
+
+Changes to item, SKU or quantity invalidate the affected confirmation and recalculate the subtotal. Reject stale approval. Approving the same finalized version twice returns the same order. Changes after approval require a new draft.
 
 Use synthetic notes or anonymized samples with permission. No real purchases, supplier messages, voice channel, multiple distributors or inventory forecasts in this draft. Primary success measure for the demo is whether a merchant can correctly state the purchased quantities and total before approving. Time savings need a measured baseline.
