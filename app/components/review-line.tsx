@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   money,
   type Language,
@@ -16,14 +16,24 @@ export function ReviewLine({
   t,
   disabled,
   onAction,
+  onEditingChange,
 }: {
   line: Line;
   language: Language;
   t: Copy;
   disabled: boolean;
+  onEditingChange: (id: string, editing: boolean) => void;
   onAction: (id: string, action: LineAction) => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
+  useEffect(
+    () => () => onEditingChange(line.id, false),
+    [line.id, onEditingChange],
+  );
+  function changeEditing(value: boolean) {
+    setEditing(value);
+    onEditingChange(line.id, value);
+  }
   const [text, setText] = useState(line.text);
   const [cases, setCases] = useState(String(line.cases ?? 1));
   const count = Number(cases);
@@ -72,16 +82,32 @@ export function ReviewLine({
           <span>{t.interpreted}:</span> {line.text}
         </p>
       )}
-      <IngredientResearch line={line} language={language} disabled={disabled} />
-      <div className="supplier-name">
-        <span className="ingredient-icon" aria-hidden="true">
-          {line.sku === "E180" ? "◒" : line.sku === "M1" ? "▥" : "◇"}
-        </span>
-        <div>
-          <p className="field-label">{t.supplier}</p>
-          <h3>{line.label ?? t.noMatch}</h3>
+      {!editing && (
+        <IngredientResearch
+          line={line}
+          language={language}
+          disabled={disabled || editing}
+          onInterpretation={(value) => {
+            setText(value);
+            changeEditing(true);
+          }}
+        />
+      )}
+      {line.sku && (
+        <div className="supplier-name">
+          <span className="ingredient-icon" aria-hidden="true">
+            {line.sku === "E180" ? "◒" : line.sku === "M1" ? "▥" : "◇"}
+          </span>
+          <div>
+            <p className="field-label">
+              {language === "es"
+                ? "Catálogo del pedido simulado"
+                : "Simulated-order catalog"}
+            </p>
+            <h3>{line.label ?? t.noMatch}</h3>
+          </div>
         </div>
-      </div>
+      )}
       <dl className="comparison">
         <div>
           <dt>{t.requested}</dt>
@@ -91,20 +117,26 @@ export function ReviewLine({
               : `${line.requestedQuantity} ${unit(line.requestedUnit)}`}
           </dd>
         </div>
-        <div>
-          <dt>{t.offered}</dt>
-          <dd>
-            {line.packSize === null
-              ? "—"
-              : `${line.packSize} ${unit(line.packUnit)}`}
-          </dd>
-        </div>
-        <div>
-          <dt>{t.price}</dt>
-          <dd>
-            {line.priceMinor === null ? "—" : money(line.priceMinor, language)}
-          </dd>
-        </div>
+        {line.sku && (
+          <>
+            <div>
+              <dt>{t.offered}</dt>
+              <dd>
+                {line.packSize === null
+                  ? "—"
+                  : `${line.packSize} ${unit(line.packUnit)}`}
+              </dd>
+            </div>
+            <div>
+              <dt>{t.price}</dt>
+              <dd>
+                {line.priceMinor === null
+                  ? "—"
+                  : money(line.priceMinor, language)}
+              </dd>
+            </div>
+          </>
+        )}
       </dl>
       {line.status === "needs_review" && (
         <p className="reason">
@@ -161,7 +193,7 @@ export function ReviewLine({
               disabled={disabled}
               onClick={() => {
                 setText(line.text);
-                setEditing(false);
+                changeEditing(false);
               }}
             >
               {t.cancel}
@@ -230,7 +262,7 @@ export function ReviewLine({
               className="text-button"
               type="button"
               disabled={disabled}
-              onClick={() => setEditing(true)}
+              onClick={() => changeEditing(true)}
             >
               {line.status === "skipped" ? t.restore : t.edit}
             </button>

@@ -128,8 +128,13 @@ test("minimums, known fees and delivery change comparable landed cost", () => {
     item,
     [
       known,
-      { ...known, url: "sold", available: false },
-      { ...known, url: "wrong-area", locationEligible: false },
+      { ...known, productId: "sold", url: "sold", available: false },
+      {
+        ...known,
+        productId: "wrong-area",
+        url: "wrong-area",
+        locationEligible: false,
+      },
     ],
     "en",
   );
@@ -174,7 +179,7 @@ test("worker failures preserve other results; unclear lines never make requests"
       return s.name === "Palouse Brand" ? [example] : [];
     },
   );
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, suppliers.length);
   assert.deepEqual(new Set(calls), new Set(["green lentils"]));
   assert.equal(r.status, "partial");
   assert.equal(r.items[0].status, "partial");
@@ -237,7 +242,7 @@ test("at most two ingredients start concurrently and input order is preserved", 
       return [];
     },
   );
-  assert.equal(peak, 6);
+  assert.equal(peak, 2 * suppliers.length);
   assert.deepEqual(
     r.items.map((i) => i.query),
     ["rice", "tomatoes", "lentils", "chickpeas"],

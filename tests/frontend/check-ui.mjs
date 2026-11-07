@@ -410,9 +410,7 @@ try {
     await start("mystery ingredient");
     assert.equal(await approve().isDisabled(), true);
     assert.equal(
-      await page
-        .getByText("No confirmed supplier match", { exact: true })
-        .count(),
+      await page.getByText("“mystery ingredient”", { exact: true }).count(),
       1,
     );
     assert.equal(

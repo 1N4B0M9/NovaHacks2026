@@ -1,18 +1,18 @@
 import { OrderError } from "../order-error";
 import { isHeading } from "../match";
 import {
-  ingredient,
+  researchIngredient,
   fold,
   unitScale,
   type Unit,
-  type Ingredient,
+  type ResearchIngredient,
   type Language,
 } from "./ingredient";
 import { rank, type Offer } from "./rank";
 import { searchStore, suppliers } from "./storefront";
 
 type Search = (
-  item: Ingredient,
+  item: ResearchIngredient,
   store: (typeof suppliers)[number],
   signal: AbortSignal,
 ) => Promise<Offer[]>;
@@ -73,7 +73,7 @@ export async function research(
   const language: Language = input.reviewLanguage,
     t = copy[language];
   // Explicit merchant corrections also support ingredients outside the seed glossary.
-  const corrected = new Map<number, Ingredient>();
+  const corrected = new Map<number, ResearchIngredient>();
   if (input.corrections !== undefined) {
     if (
       !Array.isArray(input.corrections) ||
@@ -111,7 +111,7 @@ export async function research(
     }
   }
   async function worker(source: string, index: number) {
-    const item = corrected.get(index) ?? ingredient(source);
+    const item = corrected.get(index) ?? researchIngredient(source);
     const base = {
       source,
       query: item?.query ?? null,
@@ -121,6 +121,7 @@ export async function research(
     };
     const blank = {
       offers: [],
+      bestCandidateId: null,
       bestComparableUrl: null,
       lowestProvisionalUrl: null,
     };

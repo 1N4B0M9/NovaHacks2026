@@ -72,16 +72,14 @@ async function start(text) {
   note = text;
   await page.goto(base);
   await page.locator("select").selectOption("es");
-  await page
-    .locator("#upload-note")
-    .setInputFiles({
-      name: "synthetic.png",
-      mimeType: "image/png",
-      buffer: Buffer.from(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aDlgAAAAASUVORK5CYII=",
-        "base64",
-      ),
-    });
+  await page.locator("#upload-note").setInputFiles({
+    name: "synthetic.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aDlgAAAAASUVORK5CYII=",
+      "base64",
+    ),
+  });
   await page.locator("#kitchen-note").waitFor();
   await page
     .getByRole("button", {
@@ -102,7 +100,7 @@ try {
     await page
       .getByRole("button", { name: "Buscar ofertas", exact: true })
       .count(),
-    8,
+    10,
   );
   assert.match(await card("cebolla").innerText(), /0.5 unidades/);
   assert.match(await card("cebolla").innerText(), /picada/);
@@ -110,7 +108,7 @@ try {
     await card("ajos")
       .getByRole("button", { name: "Buscar ofertas", exact: true })
       .count(),
-    0,
+    1,
   );
   assert.equal(
     await page
@@ -160,7 +158,7 @@ try {
     caret: "initial",
   });
   console.log(
-    "PASS recipe: 11 ingredients, heading, 8 research actions, clarification, source preservation, no-results, failure/retry, edit invalidation, mobile layout",
+    "PASS recipe: 11 ingredients, heading, 10 research actions, clarification, source preservation, no-results, failure/retry, edit invalidation, mobile layout",
   );
   await start("dos cebollas picadas; 3 kg de lentejas verdes");
   mode = "offers";
@@ -190,17 +188,19 @@ try {
     "PASS second note: recognized onion/lentils, English offer title, Spanish caveats and provisional cost, no approval",
   );
   // Exercise real research endpoint with manual text only; observations vary by supplier.
-  mode = "live";
-  await card("cebollas")
-    .getByRole("button", { name: "Buscar ofertas", exact: true })
-    .click();
-  await card("cebollas")
-    .locator(".research-message")
-    .waitFor({ timeout: 20000 });
-  console.log(
-    "LIVE research observation:",
-    await card("cebollas").locator(".research-message").innerText(),
-  );
+  if (process.env.LIVE_RESEARCH === "1") {
+    mode = "live";
+    await card("cebollas")
+      .getByRole("button", { name: "Buscar ofertas", exact: true })
+      .click();
+    await card("cebollas")
+      .locator(".research-message")
+      .waitFor({ timeout: 20000 });
+    console.log(
+      "LIVE research observation:",
+      await card("cebollas").locator(".research-message").innerText(),
+    );
+  }
   assert.equal(errors.length, 0, errors.join("\n"));
   console.log("PASS no browser runtime errors");
 } finally {

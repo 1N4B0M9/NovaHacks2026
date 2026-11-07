@@ -1,7 +1,8 @@
-import { matchesTitle, type Ingredient, type Unit } from "./ingredient";
+import { matchesTitle, type ResearchIngredient, type Unit } from "./ingredient";
 import type { Offer } from "./rank";
 
 export const suppliers = [
+  { name: "Ginger Fresh", origin: "https://gingerfresh.com" },
   { name: "Palouse Brand", origin: "https://www.palousebrand.com" },
   {
     name: "Country Life Natural Foods",
@@ -25,15 +26,23 @@ type Variant = {
   quantity_rule?: { min: number; max: number | null; increment: number };
 };
 
-function parsePack(label: string) {
+export function parsePack(label: string) {
   // Only a single unambiguous net size, optionally preceded by an explicit multiplier.
   const sizes = [
     ...label
       .toLowerCase()
       .matchAll(
-        /(?:(\d+)\s*[x×]\s*)?(\d+(?:\.\d+)?)\s*(fl\s*oz|lbs?|kg|oz|ml|g|l|ct|cartons?)\b/g,
+        /(?:(\d+)\s*[x×]\s*)?(\d+(?:\.\d+)?)\s*(fl\s*oz|lbs?|kg|oz|ml|g|l|ct|each|ea|pcs?|cartons?)\b/g,
       ),
   ];
+  if (
+    /\d\s*[-–/]\s*\d|\b(?:case|pack|bag)\s+of\s+\d|\d+\s*[- ](?:pack|count)\b/i.test(
+      label,
+    )
+  )
+    return null;
+  if (sizes.length === 0 && /(?:^|[ (—-])(?:each|ea|pc)(?:[ )]|$)/i.test(label))
+    return { quantity: 1, unit: "each" as Unit };
   if (
     sizes.length !== 1 ||
     /\d\s*[-–/]\s*\d/.test(label) ||
@@ -46,7 +55,7 @@ function parsePack(label: string) {
     quantity: Number(m[1] ?? 1) * Number(m[2]),
     unit: (unit === "lbs"
       ? "lb"
-      : unit === "ct"
+      : ["ct", "each", "ea", "pc", "pcs"].includes(unit)
         ? "each"
         : unit === "cartons"
           ? "carton"
@@ -82,7 +91,7 @@ async function getJson(url: URL, signal: AbortSignal) {
   throw new Error("supplier request failed");
 }
 export async function searchStore(
-  item: Ingredient,
+  item: ResearchIngredient,
   store: (typeof suppliers)[number],
   signal: AbortSignal,
 ): Promise<Offer[]> {
@@ -135,7 +144,7 @@ export async function searchStore(
       minimumSpendMinor: null,
       locationEligible: null,
     };
-    if ((!size || price === null) && detailReads < 2) {
+    if (detailReads < 2) {
       detailReads++;
       const detailUrl = new URL(url.href + ".js");
       const detail = await getJson(detailUrl, signal).catch(() => null);
@@ -161,7 +170,13 @@ export async function searchStore(
             continue;
           if (
             v.quantity_rule &&
-            (v.quantity_rule.increment !== 1 || v.quantity_rule.max !== null)
+            (!Number.isSafeInteger(v.quantity_rule.increment) ||
+              v.quantity_rule.increment < 1 ||
+              !Number.isSafeInteger(v.quantity_rule.min) ||
+              v.quantity_rule.min < 1 ||
+              (v.quantity_rule.max !== null &&
+                (!Number.isSafeInteger(v.quantity_rule.max) ||
+                  v.quantity_rule.max < v.quantity_rule.min)))
           )
             continue;
           out.push({
@@ -177,6 +192,8 @@ export async function searchStore(
             packQuantity: variantSize?.quantity ?? null,
             packUnit: variantSize?.unit ?? null,
             minimumPacks: v.quantity_rule?.min ?? null,
+            purchaseIncrement: v.quantity_rule?.increment ?? null,
+            maximumPacks: v.quantity_rule?.max ?? null,
           });
           added = true;
         }

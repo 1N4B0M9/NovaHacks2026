@@ -1,9 +1,10 @@
 import {
   unitScale,
-  type Ingredient,
+  type ResearchIngredient,
   type Language,
   type Unit,
 } from "./ingredient";
+import { assessTitle } from "./ingredient";
 
 export type Offer = {
   supplier: string;
@@ -23,16 +24,19 @@ export type Offer = {
   locationEligible: boolean | null;
   minimumPacks: number | null;
   minimumSpendMinor: number | null;
+  purchaseIncrement?: number | null;
+  maximumPacks?: number | null;
 };
 export function compareOffer(
-  item: Ingredient,
+  item: ResearchIngredient,
   offer: Offer,
   language: Language,
 ) {
   const es = language === "es";
   const quantity = offer.packQuantity;
   const scale = offer.packUnit && unitScale[offer.packUnit];
-  const [dimension, factor] = unitScale[item.unit];
+  const [dimension, factor] = item.unit ? unitScale[item.unit] : [null, 1];
+  const assessment = assessTitle(item.query, offer.title);
   const pack =
     scale && dimension === scale[0] && quantity !== null && quantity > 0
       ? (quantity * scale[1]) / factor
@@ -43,19 +47,29 @@ export function compareOffer(
     offer.priceMinor > 0
       ? Math.ceil(offer.minimumSpendMinor / offer.priceMinor)
       : 0;
-  const count =
-    pack === null
+  const needed =
+    pack === null || item.quantity === null
       ? null
       : Math.max(
           offer.minimumPacks ?? 1,
           spendPacks,
           Math.ceil(Number((item.quantity / pack).toPrecision(12))),
         );
+  const increment = offer.purchaseIncrement ?? 1;
+  const minimum = offer.minimumPacks ?? 1;
+  const count =
+    needed === null
+      ? null
+      : minimum + Math.ceil((needed - minimum) / increment) * increment;
+  const exceedsMaximum =
+    count !== null && offer.maximumPacks != null && count > offer.maximumPacks;
   const merchandise =
     count !== null && offer.priceMinor !== null
       ? count * offer.priceMinor
       : null;
   const canCompare =
+    assessment.compatibility !== "incompatible" &&
+    !exceedsMaximum &&
     merchandise !== null &&
     offer.currency === "USD" &&
     offer.available !== false &&
@@ -66,6 +80,7 @@ export function compareOffer(
       : null;
   const landed =
     canCompare &&
+    assessment.compatibility === "compatible" &&
     offer.available === true &&
     offer.minimumPacks !== null &&
     offer.minimumSpendMinor !== null &&
@@ -75,6 +90,18 @@ export function compareOffer(
       ? merchandise! + offer.shippingMinor + offer.feesMinor
       : null;
   const caveats: string[] = [];
+  if (assessment.compatibility === "needs_confirmation")
+    caveats.push(
+      es
+        ? "Confirma la variedad y los detalles del producto."
+        : "Confirm the variety and product attributes.",
+    );
+  if (exceedsMaximum)
+    caveats.push(
+      es
+        ? "La cantidad necesaria supera el máximo del proveedor."
+        : "Required quantity exceeds the supplier maximum.",
+    );
   if (!offer.currency || offer.currency !== "USD")
     caveats.push(es ? "Moneda no comparable." : "Currency not comparable.");
   if (pack === null || offer.priceMinor === null)
@@ -116,9 +143,14 @@ export function compareOffer(
     );
   return {
     ...offer,
+    candidateId: `${offer.supplier}:${offer.productId}`,
+    compatibility: assessment.compatibility,
+    matchReason: assessment.reason,
+    quantityCompatibility:
+      pack !== null && item.quantity !== null ? "comparable" : "unknown",
     packs: count,
     excess:
-      count !== null && pack !== null
+      count !== null && pack !== null && item.quantity !== null
         ? Number((count * pack - item.quantity).toFixed(6))
         : null,
     excessUnit: item.unit,
@@ -130,22 +162,44 @@ export function compareOffer(
   };
 }
 
-export function rank(item: Ingredient, offers: Offer[], language: Language) {
-  const ranked = offers
+export function rank(
+  item: ResearchIngredient,
+  offers: Offer[],
+  language: Language,
+) {
+  const unique = [
+    ...new Map(offers.map((o) => [o.supplier + ":" + o.productId, o])).values(),
+  ];
+  const ranked = unique
     .map((o) => compareOffer(item, o, language))
+    .filter((o) => o.compatibility !== "incompatible")
     .sort((a, b) => {
       const tier = (o: typeof a) =>
         o.landedMinor !== null ? 0 : o.canCompare ? 1 : 2;
       return (
+        Number(a.compatibility !== "compatible") -
+          Number(b.compatibility !== "compatible") ||
         tier(a) - tier(b) ||
         (a.landedMinor ?? a.knownCostMinor ?? Infinity) -
           (b.landedMinor ?? b.knownCostMinor ?? Infinity) ||
+        (a.excess ?? Infinity) - (b.excess ?? Infinity) ||
+        Number(a.packQuantity === null) - Number(b.packQuantity === null) ||
+        (a.packUnit === b.packUnit
+          ? (a.packQuantity ?? Infinity) - (b.packQuantity ?? Infinity)
+          : 0) ||
         a.url.localeCompare(b.url)
       );
     });
+  const first = ranked[0];
+  const tied = ranked[1] && ranked[1].landedMinor === first?.landedMinor;
+  const best =
+    first?.landedMinor !== null && first?.landedMinor !== undefined && !tied
+      ? first
+      : null;
   return {
-    offers: ranked,
-    bestComparableUrl: ranked.find((o) => o.landedMinor !== null)?.url ?? null,
+    offers: ranked.slice(0, 5),
+    bestCandidateId: best?.candidateId ?? null,
+    bestComparableUrl: best?.url ?? null,
     lowestProvisionalUrl:
       ranked.find((o) => o.canCompare && o.landedMinor === null)?.url ?? null,
   };
