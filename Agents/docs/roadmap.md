@@ -59,6 +59,11 @@ Photo-first intake follows the frontend owner’s explicit correction on 2026-11
 ## Simplified Chinese demo · [#28](https://github.com/1N4B0M9/NovaHacks2026/issues/28)
 - [x] Translate the merchant review and research flow, add an independent local Simplified Chinese OCR reader, and verify the same printed $78 order through both readers.
 - [ ] Evaluate handwritten samples from multiple writers. [Printed fixture, instructions and limits](updates/issue-28.md).
+
+## OCR verification · [#30](https://github.com/1N4B0M9/NovaHacks2026/issues/30)
+- [x] Two-pass OCR, page selection, line crops, explicit uncertainty review, and crop retries implemented and tested on the printed demo and disagreement fixtures. [Evidence](updates/issue-30.md).
+- [ ] Compare first-pass and combined exact quantity/unit errors on held-out handwritten notes.
+
 ## Public product search · [#26](https://github.com/1N4B0M9/NovaHacks2026/issues/26)
 
 - [x] When storefronts have no compatible offer, return bounded Open Food Facts listings with evidence URLs and no invented price.

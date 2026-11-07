@@ -34,6 +34,8 @@ let draft,
   failNext = null;
 let nextTranscription = "2 doz eggs, 1 case oat milk";
 let scanFailure = false;
+let simulateDisagreement = false;
+let cropRetrySeen = false;
 let successfulScans = 0,
   fallbackScans = 0;
 async function makePhoto(text) {
@@ -56,6 +58,23 @@ if (!live || process.env.MOCK_OCR === "1")
     const input = route.request().postDataJSON();
     assert.match(input.image, /^data:image\/jpeg;base64,/);
     assert.ok(input.image.length <= 4000000);
+    if (simulateDisagreement) {
+      cropRetrySeen ||= input.lineOnly === true;
+      return route.fulfill({
+        json: {
+          text: "2 cases eggs",
+          readers: { local: true, online: true },
+          rows: [
+            {
+              local: "1 case eggs",
+              online: "2 cases eggs",
+              reason: "different",
+              box: { x0: 10, y0: 10, x1: 280, y1: 74 },
+            },
+          ],
+        },
+      });
+    }
     await new Promise((resolve) => setTimeout(resolve, 150));
     await route.fulfill({
       status: scanFailure ? 503 : 200,
@@ -206,6 +225,21 @@ async function scan(text = "2 doz eggs, 1 case oat milk") {
   const response = await responsePromise;
   if (response.ok()) {
     successfulScans++;
+    const data = await response.json();
+    if (data.rows?.some((row) => row.reason)) {
+      await page.locator(".ocr-line").first().waitFor();
+      while (await page.locator(".ocr-line").count()) {
+        const row = page.locator(".ocr-line").first();
+        const field = row.locator("textarea");
+        if (/[?？]/.test(await field.inputValue())) await field.fill(text);
+        await row
+          .getByRole("button", { name: /Confirm line|Confirmar línea/ })
+          .click();
+      }
+      await page
+        .getByRole("button", { name: /Use reviewed text|Usar texto revisado/ })
+        .click();
+    }
     await page.locator("#kitchen-note").waitFor();
     if (!live)
       assert.equal(await page.locator("#kitchen-note").inputValue(), text);
@@ -470,6 +504,51 @@ try {
     },
   );
   if (!live) {
+    await check(
+      "crop before transmission and confirm an uncertain quantity before draft creation",
+      async () => {
+        await page.goto(base);
+        simulateDisagreement = true;
+        cropRetrySeen = false;
+        try {
+          await page.getByLabel("Crop before reading").check();
+          await page
+            .locator("#upload-note")
+            .setInputFiles({
+              name: "note.png",
+              mimeType: "image/png",
+              buffer: await makePhoto("1 case eggs"),
+            });
+          await page.locator(".note-crop").waitFor();
+          assert.equal(await page.locator("#kitchen-note").count(), 0);
+          await page.locator(".note-crop summary").click();
+        await page.getByRole("slider", { name: "Right" }).press("ArrowLeft");
+          await page.getByRole("button", { name: "Read selection" }).click();
+          await page.locator(".ocr-strip").waitFor();
+          assert.equal(await page.locator("#kitchen-note").count(), 0);
+          assert.equal(
+            await page
+              .getByRole("button", { name: "Use reviewed text" })
+              .isDisabled(),
+            true,
+          );
+          await page.getByRole("button", { name: "Reread this crop" }).click();
+          await page.getByText(/Crop results/).waitFor();
+          assert.ok(cropRetrySeen);
+          await page
+            .getByRole("button", { name: "Use Tesseract reading" })
+            .click();
+          await page.getByRole("button", { name: "Confirm line" }).click();
+          await page.getByRole("button", { name: "Use reviewed text" }).click();
+          assert.equal(
+            await page.locator("#kitchen-note").inputValue(),
+            "1 case eggs",
+          );
+        } finally {
+          simulateDisagreement = false;
+        }
+      },
+    );
     await check(
       "transcription failure exposes an explicit manual fallback",
       async () => {

@@ -52,7 +52,11 @@ Four fixed Shopify sources are queried, now including Ginger Fresh grocery/produ
 Client research cards show possible products, observed per-pack price/size, comparable required packs/surplus and localized uncertainty. Original supplier titles stay in English. Selecting an interpretation pre-fills a correction; saving is still a server-validated edit. Opening an editor clears displayed research and blocks simulated approval until save/cancel; edits reset evidence. Requests cancel on unmount. No raw photo leaves the browser in these regression tests.
 
 ## Local Chinese recognition
-The intake can use an offline Tesseract.js reader with bundled chi_sim data. A bounded Node child process decodes one block of text and terminates; no model API key is required. Both engines share the existing editable transcript and deterministic order path. See [demo and verification](updates/issue-28.md).
+Tesseract.js is the local first pass for every scan. A bounded child process returns the reading and line locations to the server. OpenRouter verifies them against the same image.
+
+## Two-pass read and review
+Local Tesseract returns transcript, line boxes and confidence before the configured OpenRouter model checks the same photo with the transcript as evidence. A bounded line alignment preserves additions and omissions. Client-side cropping keeps the full original for review and sends only the selection when crop-before-read is enabled. Uncertain rows require explicit correction or omission; an optional single-line reread shows both results. See [issue #30](updates/issue-30.md).
+
 ## Public product index · issue #26
 
 If ranking finds no compatible storefront offer, one request asks `https://search.openfoodfacts.org/search` for the English ingredient name. The request is limited to that host, eight hits, and a four-second deadline inside the existing ingredient budget. Product links are built only as `https://world.openfoodfacts.org/product/{code}`. Titles still pass the same compatibility rules, including form and salsa exclusions. Pack text is parsed when it is unambiguous. Price and delivery fields stay null, so a public listing cannot win a delivered-cost comparison. General web search engines responded with a human-check page or HTTP 403 and are not queried. See [ADR 004](decisions/ADR-004-public-product-search.md).

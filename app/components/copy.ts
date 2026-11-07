@@ -18,8 +18,7 @@ export const copy = {
     scanHint: "支持中、英、西班牙文 · JPG、PNG 或 WebP",
     photoAlt: "手写清单原图",
     photoCaption: "对照原图核对识别结果。",
-    photoPrivacy:
-      "在线识别会将照片发送给识别服务；本地识别仅在此应用服务器处理。",
+    photoPrivacy: "先在服务器上识别，再将照片和初稿发送至 OpenRouter 核对。",
     scanning: "正在识别手写清单…",
     invalidPhoto: "请选择小于 20 MB 的 JPG、PNG 或 WebP 照片。",
     scanFailure: "未能识别照片。请换一张更清晰的照片，或对照原图手动录入。",
@@ -122,7 +121,7 @@ export const copy = {
     photoCaption:
       "Keep the handwriting in view while you check the transcription.",
     photoPrivacy:
-      "Your photo is sent to our reading service to extract the text. No supplier order is sent.",
+      "We read the photo on this server, then send it and the first reading to OpenRouter for verification.",
     scanning: "Reading your handwriting…",
     invalidPhoto: "Choose a clear JPG, PNG or WebP photo under 20 MB.",
     scanFailure:
@@ -236,7 +235,7 @@ export const copy = {
     photoAlt: "Tu nota de cocina escrita a mano",
     photoCaption: "Compara la nota manuscrita con la transcripción.",
     photoPrivacy:
-      "La foto se envía a nuestro servicio de lectura para extraer el texto. No se envía ningún pedido al proveedor.",
+      "Primero leemos la foto en este servidor. Luego enviamos la foto y el texto a OpenRouter para comprobar la lectura.",
     scanning: "Leyendo tu nota manuscrita…",
     invalidPhoto: "Elige una foto clara JPG, PNG o WebP de menos de 20 MB.",
     scanFailure:

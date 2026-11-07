@@ -9,7 +9,7 @@ The first line is one case of eggs ($54), the second one case of oat milk ($24).
 
 ## Test in the app
 
-Select 简体中文 under Review language. Choose 本地识别 · 简体中文 to run Tesseract on the app server without an OpenRouter key; 在线识别 uses the existing online model. Upload the note, compare the raw text to the photo, then press 核对供应商商品 and 确认模拟订单. The result should contain E180 and M1 and total USD 78.00.
+Select 简体中文 under Review language. The current UI automatically uses Tesseract and OpenRouter together. Upload the note, review flagged lines against the photo, then press 核对供应商商品 and 确认模拟订单. Expect E180 and M1 and USD 78.00.
 
 Both paths were exercised in a real Chromium session against a production build. Tesseract returned 鸡 蛋 1 箱 / 燕 麦 奶 1 箱; OpenRouter returned 鸡蛋 1 箱 / 燕麦奶 1 箱. The matcher preserves the original lines and removes OCR-inserted Han character spacing only for matching. Both receipts totaled 7,800 cents. This verifies a printed fixture, not unseen handwriting.
 

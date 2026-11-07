@@ -1039,6 +1039,15 @@ footer p {
 .photo-intake {
   margin-top: 5px;
 }
+.crop-option { display: flex; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+.note-crop, .ocr-review { margin-block: 1rem; }
+.crop-surface { position: relative; overflow: hidden; touch-action: none; cursor: crosshair; margin-block: .6rem; }
+.crop-surface img { display: block; width: 100%; user-select: none; }
+.crop-surface span { position: absolute; border: 2px solid currentColor; box-shadow: 0 0 0 100vmax rgb(0 0 0 / .48); pointer-events: none; }
+.note-crop details label { display: flex; gap: .75rem; align-items: center; }
+.ocr-line { min-width: 0; margin: .8rem 0; padding: .8rem; border: 1px solid currentColor; border-radius: var(--radius); }
+.ocr-line p { overflow-wrap: anywhere; }
+.ocr-strip { display: block; max-width: 100%; max-height: 7rem; margin-bottom: .5rem; }
 .scan-placeholder {
   border: 1px dashed var(--border);
   border-radius: var(--radius);

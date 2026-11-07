@@ -2,6 +2,9 @@
 import { useRef, useState } from "react";
 import type { Copy } from "./copy";
 import { localize, type Language } from "../../lib/locale";
+import { NoteCrop, cropImage } from "./note-crop";
+import { OcrReview } from "./ocr-review";
+import type { ReviewLine, Box } from "../../lib/ocr-lines";
 
 // Resize on-device before transmission; the backend caps encoded input at 4M characters.
 async function preparePhoto(file: File): Promise<string> {
@@ -62,28 +65,55 @@ export function PhotoIntake({
   const upload = useRef<HTMLInputElement>(null);
   const busyRef = useRef(false);
   const [reading, setReading] = useState(false);
-  const [engine, setEngine] = useState("openrouter");
+  const [source, setSource] = useState("");
+  const sourceLanguage = source || language;
+  const [original, setOriginal] = useState("");
+  const [scannedImage, setScannedImage] = useState("");
+  const [cropFirst, setCropFirst] = useState(false);
+  const [cropping, setCropping] = useState(false);
+  const [rows, setRows] = useState<ReviewLine[] | null>(null);
+  const [singleReader, setSingleReader] = useState("");
+  const label = (en: string, es: string, zh: string) =>
+    localize(language, en, es, zh);
   const [error, setError] = useState<"image" | "transcription" | null>(null);
-  async function scan(file: File) {
+  async function scan(file?: File, selection?: Box) {
     if (busyRef.current) return;
     busyRef.current = true;
     setReading(true);
     setError(null);
     onBusy(true);
     onStart();
-    onPhoto(null);
+    setRows(null);
+    setSingleReader("");
+    if (file) {
+      setOriginal("");
+      setScannedImage("");
+      onPhoto(null);
+    }
     let prepared = false;
     const controller = new AbortController();
     let timeout: ReturnType<typeof setTimeout> | undefined;
     try {
-      const image = await preparePhoto(file);
-      onPhoto(image);
+      const full = file ? await preparePhoto(file) : original;
+      if (file) setOriginal(full);
+      if (file && cropFirst) {
+        onPhoto(full);
+        setCropping(true);
+        return;
+      }
+      setCropping(false);
+      const image = selection ? await cropImage(full, selection, true) : full;
+      setScannedImage(image);
+      onPhoto(full);
       prepared = true;
-      timeout = setTimeout(() => controller.abort(), 22000);
+      timeout = setTimeout(() => controller.abort(), 40000);
       const response = await fetch("/api/transcribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image, engine }),
+        body: JSON.stringify({
+          image,
+          sourceLanguage,
+        }),
         signal: controller.signal,
       });
       const result = await response.json().catch(() => null);
@@ -94,7 +124,11 @@ export function PhotoIntake({
         result.text.length > 5000
       )
         throw new Error("transcription_unavailable");
-      onText(result.text);
+      if (result.rows?.some((r: ReviewLine) => r.reason)) {
+        setRows(result.rows);
+        if (!result.readers.local || !result.readers.online)
+          setSingleReader(result.readers.local ? "local" : "online");
+      } else onText(result.text);
     } catch {
       setError(prepared ? "transcription" : "image");
     } finally {
@@ -106,37 +140,37 @@ export function PhotoIntake({
   }
   return (
     <div className="photo-intake">
-      <label htmlFor="note-reader" className="field-label">
-        {localize(
-          language,
-          "Text recognition",
-          "Reconocimiento de texto",
-          "文字识别方式",
-        )}
+      <label className="field-label" htmlFor="note-source">
+        {label("Language on the note", "Idioma de la nota", "清单原文语言")}
       </label>
       <select
-        id="note-reader"
-        value={engine}
+        id="note-source"
+        value={sourceLanguage}
         disabled={disabled || reading}
-        onChange={(event) => setEngine(event.target.value)}
+        onChange={(e) => {
+          setSource(e.target.value);
+          if (original) {
+            onStart();
+            setRows(null);
+            setSingleReader("");
+            setCropping(true);
+          }
+        }}
       >
-        <option value="openrouter">
-          {localize(
-            language,
-            "Online · multilingual",
-            "En línea · multilingüe",
-            "在线识别 · 多语言",
-          )}
-        </option>
-        <option value="local-zh">
-          {localize(
-            language,
-            "Local OCR · Simplified Chinese",
-            "OCR local · chino simplificado",
-            "本地识别 · 简体中文",
-          )}
-        </option>
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="zh">简体中文</option>
+        <option value="zh-Hant">繁體中文</option>
       </select>
+      <label className="crop-option">
+        <input
+          type="checkbox"
+          checked={cropFirst}
+          disabled={disabled || reading}
+          onChange={(e) => setCropFirst(e.target.checked)}
+        />
+        {label("Crop before reading", "Recortar antes de leer", "先裁剪再识别")}
+      </label>
       <input
         ref={camera}
         id="camera-note"
@@ -168,9 +202,16 @@ export function PhotoIntake({
           if (file) void scan(file);
         }}
       />
-      {photo ? (
+      {cropping && original ? (
+        <NoteCrop
+          language={language}
+          photo={original}
+          onApply={(b) => void scan(undefined, b)}
+          onCancel={() => void scan()}
+        />
+      ) : photo ? (
         <figure className="note-photo">
-          <img src={photo} alt={t.photoAlt} />
+          <img src={scannedImage || photo} alt={t.photoAlt} />
           <figcaption>{t.photoCaption}</figcaption>
         </figure>
       ) : (
@@ -217,16 +258,56 @@ export function PhotoIntake({
           {photo ? t.replacePhoto : t.uploadPhoto}
         </button>
       </div>
-      <p className="photo-privacy">
-        {engine === "local-zh"
-          ? localize(
-              language,
-              "This server reads your photo locally. No external recognition service receives it.",
-              "Este servidor lee la foto localmente, sin enviarla a un servicio externo.",
-              "照片由本应用服务器本地识别，不会发送给外部识别服务。",
-            )
-          : t.photoPrivacy}
-      </p>
+      {original && !reading && !cropping && (
+        <button
+          type="button"
+          className="text-button"
+          disabled={disabled}
+          onClick={() => {
+            onStart();
+            setError(null);
+            setRows(null);
+            setSingleReader("");
+            setCropping(true);
+          }}
+        >
+          {label(
+            "Crop and reread",
+            "Recortar y volver a leer",
+            "裁剪并重新识别",
+          )}
+        </button>
+      )}
+      {rows && photo && (
+        <>
+          {singleReader && (
+            <p role="status">
+              {singleReader === "local"
+                ? label(
+                    "Online verification unavailable. Check the local reading.",
+                    "Sin verificación en línea. Revisa la lectura local.",
+                    "在线核对不可用，请确认本地结果。",
+                  )
+                : label(
+                    "Local reading unavailable. Check the online reading.",
+                    "Lectura local no disponible. Revisa el resultado en línea.",
+                    "本地识别不可用，请确认在线结果。",
+                  )}
+            </p>
+          )}
+          <OcrReview
+            rows={rows}
+            photo={scannedImage || photo}
+            language={language}
+            sourceLanguage={sourceLanguage}
+            onDone={(v) => {
+              onText(v);
+              setRows(null);
+            }}
+          />
+        </>
+      )}
+      <p className="photo-privacy">{t.photoPrivacy}</p>
       {reading && (
         <p className="scan-status" role="status">
           <span className="scan-dot" />

@@ -4,20 +4,13 @@ import { Orders } from "./orders";
 import { research } from "./research/run";
 import { matchIngredient } from "./match";
 import { readFileSync } from "node:fs";
-import { POST } from "../app/api/transcribe/route";
+import { transcribeLocally } from "./chinese-ocr";
 
 test("local Simplified Chinese reader transcribes the printed demo without an external model", async () => {
   const image =
     "data:image/png;base64," +
     readFileSync("tests/fixtures/chinese-order.png").toString("base64");
-  const response = await POST(
-    new Request("http://localhost/api/transcribe", {
-      method: "POST",
-      body: JSON.stringify({ image, engine: "local-zh" }),
-    }),
-  );
-  assert.equal(response.status, 200);
-  const { text } = await response.json();
+  const { text } = await transcribeLocally(image, "zh");
   assert.deepEqual(
     text
       .trim()
