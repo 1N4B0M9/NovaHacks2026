@@ -2,9 +2,7 @@
 
 **Approved MVP · [Issue #1](https://github.com/1N4B0M9/NovaHacks2026/issues/1)**
 
-One merchant, one supplier and one demo language pair. Use English and illustrative Spanish for initial fixtures. Use fluent-reviewed translations when available and label unreviewed translations illustrative. Primary intake is a photograph of handwritten kitchen notes in another language. Capture or upload a photo, extract an editable list, and compare it with the original image before supplier matching. Direct pasted/prewritten lists are not the primary user journey; manual transcription is an explicit fallback after a failed scan. Preserve original words beside supplier-ready lines.
-
-This photo-first amendment follows the frontend owner’s explicit instruction in chat on 2026-11-07, relayed in [issue #3](https://github.com/1N4B0M9/NovaHacks2026/issues/3#issuecomment-6710867168), and supersedes the earlier typed-first intake assumption.
+One merchant, one supplier and one demo language pair. Use English and illustrative Spanish for initial fixtures. Use fluent-reviewed translations when available and label unreviewed translations illustrative. Typed or pasted input is required; photo input is optional. Preserve original words beside supplier-ready lines.
 
 ## Acceptance examples
 

@@ -1,0 +1,50 @@
+[
+  {
+    "sku": "E180",
+    "label": "Eggs",
+    "aliases": [
+      "eggs",
+      "egg",
+      "huevo",
+      "huevos"
+    ],
+    "size": 180,
+    "unit": "each",
+    "price": 5400
+  },
+  {
+    "sku": "M1",
+    "label": "Oat milk",
+    "aliases": [
+      "oat milk",
+      "leche de avena"
+    ],
+    "size": 6,
+    "unit": "carton",
+    "price": 2400
+  },
+  {
+    "sku": "T25",
+    "label": "Tomatoes",
+    "aliases": [
+      "tomatoes",
+      "tomato",
+      "tomates",
+      "tomate"
+    ],
+    "size": 25,
+    "unit": "lb",
+    "price": 3200
+  },
+  {
+    "sku": "R12",
+    "label": "Romaine",
+    "aliases": [
+      "romaine",
+      "lechuga romana"
+    ],
+    "size": 12,
+    "unit": "each",
+    "price": 2800
+  }
+]

@@ -1,13 +1,9 @@
 # Current project status
 
-**PHASE: PLANNING**
+**PHASE: BUILD**
 
-**Human-approved MVP?** No
+Use the [shared feature roadmap](roadmap.md) for the live checklist and verification status.
 
-**Human-approved architecture?** No
+The owner authorized implementation of the final plan and the backend/frontend split. The agreed plan and partner review are in issue #1. Backend issues #2 and #4 belong to the lead. Frontend #3 belongs to the partner. Integration and independent PR review belong to the lead under #5. Humans merge after review.
 
-The two independent Codex council roles recommended supplier ordering after cross-examination. The owner has directed planning toward immigrant restaurant operators. The working brief focuses on merchants whose kitchen language and supplier catalog language differ.
-
-[Issue #1](https://github.com/1N4B0M9/NovaHacks2026/issues/1) is the partner discussion. The revised brief, requirements, architecture and API contract are drafts. The opening slides and council synthesis establish event context; merchant validation, language pair, app credentials, stack and team ownership remain open.
-
-**Next:** Both owners review the problem statement and egg-case example. Select a language pair someone can validate, agree on the skip behavior and record MVP/architecture approval before implementation.
+Backend runs on a single Node 24+ host. The fixture language pair is English and illustrative Spanish. Fluent review and merchant validation are pending. See the issue-specific update notes for evidence. Frontend completion and integrated demo rehearsal require partner work.

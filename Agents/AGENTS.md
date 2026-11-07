@@ -28,6 +28,7 @@ If these contradict each other, flag the conflict and request owner judgment; do
 - No code generation or features before explicit owner approval.
 
 ## Documentation (part of the definition of done)
+- Both owners maintain their feature checkboxes and evidence in `docs/roadmap.md` in the same PR as each feature or scope change. The lead maintains the integration section.
 - Every meaningful scope change updates `docs/requirements.md`.
 - Every meaningful structural or integration change updates `docs/architecture.md` or `docs/api-contracts.md`.
 - Every major tradeoff/decision adds or updates one Architecture Decision Record under `docs/decisions/` with status, context, options, rationale, downsides, and source issue.
