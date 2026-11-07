@@ -17,3 +17,7 @@ One merchant, one supplier and one demo language pair. Use English and illustrat
 Changes to item, SKU or quantity invalidate the affected confirmation and recalculate the subtotal. Reject stale approval. Approving the same finalized version twice returns the same order. Changes after approval require a new draft.
 
 Use synthetic notes or anonymized samples with permission. No real purchases, supplier messages, voice channel, multiple distributors or inventory forecasts in this draft. Primary success measure for the demo is whether a merchant can correctly state the purchased quantities and total before approving. Time savings need a measured baseline.
+
+## Approved extension · issue #10
+
+Multi-store research is available after merchant review. Preserve source lines and quantities; use English searches and English product titles with localized explanations in English or Spanish. Research must return bounded partial results, uncertainty, compatible-unit cost comparisons and links to the observed evidence. Incomplete shipping/fees, destination and minimum order must remain visible. An ambiguous ingredient requires correction. A product recommendation is informational; the existing simulated purchase flow remains limited to its own catalog.

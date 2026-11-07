@@ -27,4 +27,11 @@ Photo-first intake follows the frontend owner’s explicit correction on 2026-11
 - [ ] Run the five-minute demo rehearsal, including unfamiliar input, fallback and one simulated receipt. Obtain fluent review or identify Spanish fixtures as illustrative.
 - [ ] Record human merge status and the revision used for the demo.
 
-**Scope boundary.** Live purchasing, multiple suppliers, forecasting, voice and spend caps are outside the approved MVP. Merchant benefits remain hypotheses until validated.
+**Scope boundary.** The simulated order uses one catalog. Issue #10 adds read-only research across multiple suppliers. Live purchasing, forecasting, voice and spend caps remain outside the MVP.
+
+## Ingredient research · backend lead · [#10](https://github.com/1N4B0M9/NovaHacks2026/issues/10)
+
+- [x] Normalize confirmed English/Spanish ingredient lines, hold ambiguities, and research public English storefronts with bounded workers.
+- [x] Return timestamped supplier evidence, localized caveats, total required pack cost, alternatives and separate provisional vs verified landed-cost rankings.
+- [x] Exercise fixture failures/timeouts and a real Spanish HTTP walkthrough. See [evidence](updates/issue-10.md).
+- [ ] Partner may integrate research UI using the additive contract. Human review/merge remains pending.
