@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { copy, unitLabel } from "./components/copy";
 import { ReviewLine } from "./components/review-line";
 import { PhotoIntake } from "./components/photo-intake";
@@ -42,6 +42,12 @@ export default function Home() {
     null,
   );
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [editingLine, setEditingLine] = useState<string | null>(null);
+  const onEditingChange = useCallback((id: string, editing: boolean) => {
+    setEditingLine((current) =>
+      editing ? id : current === id ? null : current,
+    );
+  }, []);
   const [order, setOrder] = useState<Order | null>(null);
   const [pending, setPending] = useState<
     "create" | "update" | "approve" | null
@@ -63,7 +69,7 @@ export default function Home() {
     body: unknown,
     operation: "create" | "update" | "approve",
   ) {
-    if (busy.current) return;
+    if (busy.current || (operation === "approve" && editingLine)) return;
     busy.current = true;
     setPending(operation);
     setError("");
@@ -136,6 +142,7 @@ export default function Home() {
   function reset() {
     if (busy.current) return;
     setDraft(null);
+    setEditingLine(null);
     setText("");
     setPhoto(null);
     setIntakeMode(null);
@@ -148,7 +155,11 @@ export default function Home() {
     draft?.lines.filter((line) => line.status === "needs_review").length ?? 0;
   const included = draft?.lines.filter((line) => line.status === "ready") ?? [];
   const readyToApprove =
-    !!draft?.canApprove && !held && included.length > 0 && !finalized;
+    !!draft?.canApprove &&
+    !held &&
+    included.length > 0 &&
+    !finalized &&
+    !editingLine;
   const step = order ? 3 : draft ? 2 : 1;
   return (
     <div className="app-shell" lang={language}>
@@ -383,6 +394,18 @@ export default function Home() {
                 {t.editList}
               </button>
             </div>
+            {!!draft.headings?.length && (
+              <div className="recipe-headings">
+                <p className="field-label">
+                  {language === "es"
+                    ? "Título de la receta · No se compra"
+                    : "Recipe heading · Not a purchase item"}
+                </p>
+                {draft.headings.map((title, index) => (
+                  <p key={index}>{title}</p>
+                ))}
+              </div>
+            )}
             <div className="review-layout">
               <div className="line-list" aria-busy={!!pending}>
                 {draft.lines.map((line) => (
@@ -391,7 +414,12 @@ export default function Home() {
                     line={line}
                     language={language}
                     t={t}
-                    disabled={!!pending || finalized}
+                    disabled={
+                      !!pending ||
+                      finalized ||
+                      (!!editingLine && editingLine !== line.id)
+                    }
+                    onEditingChange={onEditingChange}
                     onAction={act}
                   />
                 ))}
@@ -440,6 +468,13 @@ export default function Home() {
                         : included.length === 0
                           ? t.emptyHint
                           : t.reviewRequired}
+                  </p>
+                )}
+                {editingLine && (
+                  <p role="status" className="small">
+                    {language === "es"
+                      ? "Guarda o cancela la corrección antes de aprobar."
+                      : "Save or cancel the correction before approving."}
                   </p>
                 )}
                 <button

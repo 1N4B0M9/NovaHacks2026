@@ -6,7 +6,7 @@
 
 Selected stack: one TypeScript Next.js app with a mobile browser UI and server routes, a small checked-in JSON catalog, and SQLite for drafts and the simulated outbox on one local demo host. A local presentation avoids a dependency on deployment credentials. The lead owns the root package and app/api. The partner owns the page, layout, styles and UI components.
 
-1. The browser accepts a photo or pasted text plus an explicit review language. Show the original locally. Use human-reviewed UI strings for the selected demo languages.
+1. The browser accepts a handwritten-note photo plus an explicit review language, with editable extraction and an explicit manual transcription fallback after scan failure. Show the original locally. Use human-reviewed UI strings for the selected demo languages.
 2. A server-side extraction adapter returns source text, candidate item, quantity and unit per line. An optional vision/language model receives only the submitted content using an application credential. If unavailable, accept typed text and use the curated bilingual aliases and units for the demo.
 3. The order service resolves aliases to catalog SKUs. It calculates pack conversions and totals using catalog data and integer currency amounts. Uncertain readings, missing units, ambiguous catalog matches and pack mismatches require review. Never let model output determine price or authorize a purchase.
 4. The browser renders the supplier label and the merchant's words together with localized explanations. Merchant edits trigger server-side validation. The approval transaction rechecks all lines, requires a nonempty order and stores one immutable supplier preview per draft. Duplicate approval returns that same order.
@@ -38,3 +38,19 @@ server/match.ts reads the domain vocabulary and verified catalog, parses a quant
 
 ## Recipe inputs
 The shared matcher separates kitchen preparation from retail constraints and stores recognized supplier-independent identities. Titles are kept as draft metadata; research reports them without searching. Fractions and recipe units can be used for research. No mass/count or density conversion is inferred. Up to 16 lines remain bounded by two active ingredient workers and individual deadlines.
+
+## Recipe discovery interface · issue #14
+
+The client consumes optional matching metadata with type-only imports; server matcher and research implementations are not imported into the client runtime. Each eligible line has an explicit research action with a 15-second client deadline, failure/retry state and cancellation on unmount. One line is sent per request, preserving the corrected text and review language. Draft version changes remount line views and clear research evidence. Results display source links, observation timestamps, known costs and caveats without mutating purchase state. Recipe headings remain visible outside purchasable lines. Evidence links permit only HTTP(S).
+
+## Flexible grocery candidates · issue #20
+
+Research uses a nullable-demand type separate from the strict ingredient parser used for order readiness. An exact known identity can be browsed without an amount. Deterministic product assessment normalizes plural ingredient tokens, retains brands/varieties as confirmation-required candidates, and rejects incompatible forms/cuts/flour bases. Pack arithmetic remains deterministic and separate. See [ADR 003](decisions/ADR-003-candidate-discovery.md).
+
+Four fixed Shopify sources are queried, now including Ginger Fresh grocery/produce. Public search/cart/product JSON endpoints were verified on 2026-11-07; location eligibility is not inferred. Each ingredient retains its 6.5-second deadline, up to two concurrent ingredient workers, six search hits per store and at most two detail reads per store. With four stores, at most eight store workers run concurrently per request. Known supplier quantity rules are retained. Failed detail requests can leave search-level evidence with unknown pack/rules; no fields are invented. This source is evidence for discovery, not a guarantee of delivery.
+
+Client research cards show possible products, observed per-pack price/size, comparable required packs/surplus and localized uncertainty. Original supplier titles stay in English. Selecting an interpretation pre-fills a correction; saving is still a server-validated edit. Opening an editor clears displayed research and blocks simulated approval until save/cancel; edits reset evidence. Requests cancel on unmount. No raw photo leaves the browser in these regression tests.
+
+## Public product index · issue #26
+
+If ranking finds no compatible storefront offer, one request asks `https://search.openfoodfacts.org/search` for the English ingredient name. The request is limited to that host, eight hits, and a four-second deadline inside the existing ingredient budget. Product links are built only as `https://world.openfoodfacts.org/product/{code}`. Titles still pass the same compatibility rules, including form and salsa exclusions. Pack text is parsed when it is unambiguous. Price and delivery fields stay null, so a public listing cannot win a delivered-cost comparison. General web search engines responded with a human-check page or HTTP 403 and are not queried. See [ADR 004](decisions/ADR-004-public-product-search.md).
