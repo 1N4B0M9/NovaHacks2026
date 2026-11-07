@@ -232,6 +232,8 @@ export function unitLabel(unit: string | null, language: Language) {
   if (unit === "carton" || unit === "cartons") return t.cartons;
   if (unit === "case") return t.caseUnit;
   if (unit === "cases") return t.casesUnit;
+  if (unit === "tsp") return language === "es" ? "cucharaditas" : "tsp";
+  if (unit === "cup") return language === "es" ? "tazas" : "cups";
   if (unit === "lb") return language === "es" ? "libras" : "lb";
   return unit ?? "";
 }
