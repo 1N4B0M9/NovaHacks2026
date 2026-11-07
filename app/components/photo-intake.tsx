@@ -3,8 +3,7 @@ import { useRef, useState } from "react";
 import type { Copy } from "./copy";
 import { localize, type Language } from "../../lib/locale";
 import { NoteCrop, cropImage } from "./note-crop";
-import { OcrReview } from "./ocr-review";
-import type { ReviewLine, Box } from "../../lib/ocr-lines";
+import type { Box } from "../../lib/ocr-lines";
 
 // Resize on-device before transmission; the backend caps encoded input at 4M characters.
 async function preparePhoto(file: File): Promise<string> {
@@ -42,6 +41,7 @@ async function preparePhoto(file: File): Promise<string> {
 
 export function PhotoIntake({
   language,
+  locationField,
   t,
   photo,
   disabled,
@@ -52,6 +52,7 @@ export function PhotoIntake({
   onBusy,
 }: {
   language: Language;
+  locationField: React.ReactNode;
   t: Copy;
   photo: string | null;
   disabled: boolean;
@@ -68,11 +69,8 @@ export function PhotoIntake({
   const [source, setSource] = useState("");
   const sourceLanguage = source || language;
   const [original, setOriginal] = useState("");
-  const [scannedImage, setScannedImage] = useState("");
   const [cropFirst, setCropFirst] = useState(false);
   const [cropping, setCropping] = useState(false);
-  const [rows, setRows] = useState<ReviewLine[] | null>(null);
-  const [singleReader, setSingleReader] = useState("");
   const label = (en: string, es: string, zh: string) =>
     localize(language, en, es, zh);
   const [error, setError] = useState<"image" | "transcription" | null>(null);
@@ -83,11 +81,8 @@ export function PhotoIntake({
     setError(null);
     onBusy(true);
     onStart();
-    setRows(null);
-    setSingleReader("");
     if (file) {
       setOriginal("");
-      setScannedImage("");
       onPhoto(null);
     }
     let prepared = false;
@@ -103,7 +98,6 @@ export function PhotoIntake({
       }
       setCropping(false);
       const image = selection ? await cropImage(full, selection, true) : full;
-      setScannedImage(image);
       onPhoto(full);
       prepared = true;
       timeout = setTimeout(() => controller.abort(), 40000);
@@ -124,11 +118,7 @@ export function PhotoIntake({
         result.text.length > 5000
       )
         throw new Error("transcription_unavailable");
-      if (result.rows?.some((r: ReviewLine) => r.reason)) {
-        setRows(result.rows);
-        if (!result.readers.local || !result.readers.online)
-          setSingleReader(result.readers.local ? "local" : "online");
-      } else onText(result.text);
+      onText(result.text);
     } catch {
       setError(prepared ? "transcription" : "image");
     } finally {
@@ -140,28 +130,31 @@ export function PhotoIntake({
   }
   return (
     <div className="photo-intake">
-      <label className="field-label" htmlFor="note-source">
-        {label("Language on the note", "Idioma de la nota", "清单原文语言")}
-      </label>
-      <select
-        id="note-source"
-        value={sourceLanguage}
-        disabled={disabled || reading}
-        onChange={(e) => {
-          setSource(e.target.value);
-          if (original) {
-            onStart();
-            setRows(null);
-            setSingleReader("");
-            setCropping(true);
-          }
-        }}
-      >
-        <option value="en">English</option>
-        <option value="es">Español</option>
-        <option value="zh">简体中文</option>
-        <option value="zh-Hant">繁體中文</option>
-      </select>
+      <div className="scan-settings">
+        {locationField}
+        <div>
+          <label className="field-label" htmlFor="note-source">
+            {label("Language on the note", "Idioma de la nota", "清单原文语言")}
+          </label>
+          <select
+            id="note-source"
+            value={sourceLanguage}
+            disabled={disabled || reading}
+            onChange={(e) => {
+              setSource(e.target.value);
+              if (original) {
+                onStart();
+                setCropping(true);
+              }
+            }}
+          >
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="zh">简体中文</option>
+            <option value="zh-Hant">繁體中文</option>
+          </select>
+        </div>
+      </div>
       <label className="crop-option">
         <input
           type="checkbox"
@@ -210,36 +203,11 @@ export function PhotoIntake({
           onCancel={() => void scan()}
         />
       ) : photo ? (
-        <figure className="note-photo">
-          <img src={scannedImage || photo} alt={t.photoAlt} />
-          <figcaption>{t.photoCaption}</figcaption>
-        </figure>
-      ) : (
-        <div className="scan-placeholder">
-          <svg
-            viewBox="0 0 64 64"
-            width="56"
-            height="56"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            aria-hidden="true"
-          >
-            <path d="M8 23V10h13M43 10h13v13M56 41v13H43M21 54H8V41" />
-            <rect
-              x="20"
-              y="17"
-              width="25"
-              height="32"
-              rx="3"
-              transform="rotate(7 32 33)"
-            />
-            <path d="m25 26 14 2m-15 6 12 2m-13 6 8 1" />
-          </svg>
-          <strong>{t.scanPrompt}</strong>
-          <p>{t.scanHint}</p>
-        </div>
-      )}
+        <details className="photo-original">
+          <summary>{label("View photo", "Ver foto", "查看原图")}</summary>
+          <img src={photo} alt={t.photoAlt} />
+        </details>
+      ) : null}
       <div className="photo-actions">
         <button
           type="button"
@@ -247,6 +215,10 @@ export function PhotoIntake({
           disabled={disabled || reading}
           onClick={() => camera.current?.click()}
         >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h4l2-3h4l2 3h4v13H4z" />
+            <circle cx="12" cy="13" r="3.5" />
+          </svg>
           {t.takePhoto}
         </button>
         <button
@@ -255,6 +227,9 @@ export function PhotoIntake({
           disabled={disabled || reading}
           onClick={() => upload.current?.click()}
         >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 16V4m-5 5 5-5 5 5M4 16v4h16v-4" />
+          </svg>
           {photo ? t.replacePhoto : t.uploadPhoto}
         </button>
       </div>
@@ -266,8 +241,6 @@ export function PhotoIntake({
           onClick={() => {
             onStart();
             setError(null);
-            setRows(null);
-            setSingleReader("");
             setCropping(true);
           }}
         >
@@ -278,36 +251,7 @@ export function PhotoIntake({
           )}
         </button>
       )}
-      {rows && photo && (
-        <>
-          {singleReader && (
-            <p role="status">
-              {singleReader === "local"
-                ? label(
-                    "Online verification unavailable. Check the local reading.",
-                    "Sin verificación en línea. Revisa la lectura local.",
-                    "在线核对不可用，请确认本地结果。",
-                  )
-                : label(
-                    "Local reading unavailable. Check the online reading.",
-                    "Lectura local no disponible. Revisa el resultado en línea.",
-                    "本地识别不可用，请确认在线结果。",
-                  )}
-            </p>
-          )}
-          <OcrReview
-            rows={rows}
-            photo={scannedImage || photo}
-            language={language}
-            sourceLanguage={sourceLanguage}
-            onDone={(v) => {
-              onText(v);
-              setRows(null);
-            }}
-          />
-        </>
-      )}
-      <p className="photo-privacy">{t.photoPrivacy}</p>
+
       {reading && (
         <p className="scan-status" role="status">
           <span className="scan-dot" />
