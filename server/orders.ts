@@ -5,7 +5,7 @@ import { DatabaseSync } from "node:sqlite";
 import { interpret, type Line } from "./interpret";
 import { isHeading } from "./match";
 import { OrderError } from "./order-error";
-import { research } from "./research/run";
+import { research, type LineProgress } from "./research/run";
 export { OrderError } from "./order-error";
 
 type Input = Record<string, unknown>;
@@ -203,6 +203,7 @@ export class Orders {
         }[];
       }[];
     }> = research,
+    onProgress?: (event: LineProgress & { id: string }) => void,
   ) {
     const zip = postalCode(input.zip);
     const row = this.db.prepare("SELECT body FROM drafts WHERE id=?").get(id);
@@ -220,6 +221,15 @@ export class Orders {
           text: group.map((line) => line.source).join("\n"),
           reviewLanguage: current.reviewLanguage,
           deliveryLocation: zip,
+          onLine: (event: LineProgress) => {
+            const line = group[event.index];
+            if (line)
+              onProgress?.({
+                ...event,
+                id: line.id,
+                source: line.source,
+              });
+          },
         });
         items = found.items;
       } catch {

@@ -225,7 +225,7 @@ export async function searchArea(
   const store = await nearestStore(zip, signal);
   if (!store) return [];
   const query =
-    item.query === "pepper" && (item.unit === "tsp" || item.unit === "tbsp")
+    item.query === "pepper" && item.unit === "tsp"
       ? "black pepper"
       : item.query;
   const products = await searchStore(query, store, signal);

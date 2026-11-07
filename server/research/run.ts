@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { OrderError } from "../order-error";
 import { isHeading } from "../match";
 import {
@@ -10,6 +11,7 @@ import {
 } from "./ingredient";
 import { rank, type Offer } from "./rank";
 import { searchArea } from "./area";
+import { buyerForOrder, type Buyer } from "./buyers";
 import { searchStore, suppliers } from "./storefront";
 import { searchWeb } from "./web";
 
@@ -27,6 +29,15 @@ type AreaSearch = (
   zip: string,
   signal: AbortSignal,
 ) => Promise<Offer[]>;
+export type LineProgress = {
+  phase: "start" | "done";
+  index: number;
+  source: string;
+  title: string | null;
+  supplier: string | null;
+  priceMinor: number | null;
+  url: string | null;
+};
 const copy = {
   en: {
     review: "Correct the ingredient, quantity or unit before searching.",
@@ -66,6 +77,7 @@ export async function research(
   timeoutMs = 6500,
   findOnWeb: WebSearch = searchWeb,
   findInArea: AreaSearch = searchArea,
+  askBuyer: Buyer | null = buyerForOrder(randomUUID()),
 ) {
   if (input.reviewLanguage !== "en" && input.reviewLanguage !== "es")
     throw new OrderError(400, "invalid_language");
@@ -89,6 +101,10 @@ export async function research(
     throw new OrderError(400, "invalid_line_count");
   const language: Language = input.reviewLanguage,
     t = copy[language];
+  const report =
+    typeof input.onLine === "function"
+      ? (input.onLine as (event: LineProgress) => void)
+      : null;
   const deliveryZip =
     typeof input.deliveryLocation === "string" &&
     /^\d{5}(?:-\d{4})?$/.test(input.deliveryLocation.trim())
@@ -163,6 +179,15 @@ export async function research(
         message: t.review,
         stores: [],
       };
+    report?.({
+      phase: "start",
+      index,
+      source,
+      title: null,
+      supplier: null,
+      priceMinor: null,
+      url: null,
+    });
     const signal = AbortSignal.timeout(timeoutMs);
     const areaTask = deliveryZip
       ? findInArea(item, deliveryZip, signal).then(
@@ -173,6 +198,12 @@ export async function research(
           }),
         )
       : Promise.resolve({ status: "skipped" as const, offers: [] as Offer[] });
+    const buyerTask =
+      deliveryZip && askBuyer
+        ? askBuyer(item, deliveryZip, AbortSignal.timeout(12000)).catch(
+            () => null,
+          )
+        : Promise.resolve(null);
     const observed = await Promise.all(
       suppliers.map(async (store) => {
         try {
@@ -191,15 +222,21 @@ export async function research(
       }),
     );
     const storeOffers = observed.flatMap((x) => x.offers);
-    const area = await areaTask;
+    const [area, buyerPick] = await Promise.all([areaTask, buyerTask]);
     const storeRanked = rank(item, storeOffers, language);
     let webStatus: "ok" | "failed" | "timeout" | "skipped" = "skipped";
     let webSupplier = "Open Food Facts";
     let webOffers: Offer[] = [];
     if (deliveryZip && !storeRanked.offers.some((offer) => offer.canCompare)) {
-      webOffers = area.offers;
-      webStatus = area.status;
-      webSupplier = "Nearby web search";
+      if (buyerPick) {
+        webOffers = [buyerPick];
+        webStatus = "ok";
+        webSupplier = "Buyer agent";
+      } else {
+        webOffers = area.offers;
+        webStatus = area.status;
+        webSupplier = "Nearby web search";
+      }
     }
     if (
       !webOffers.length &&
@@ -280,7 +317,18 @@ export async function research(
   async function consume() {
     while (next < lines.length) {
       const index = next++;
-      items[index] = await worker(lines[index], index);
+      const result = await worker(lines[index], index);
+      items[index] = result;
+      const offer = result.offers[0];
+      report?.({
+        phase: "done",
+        index,
+        source: lines[index],
+        title: offer?.title ?? null,
+        supplier: offer?.supplier ?? null,
+        priceMinor: offer?.priceMinor ?? null,
+        url: offer?.url ?? null,
+      });
     }
   }
   await Promise.all([consume(), consume()]);
