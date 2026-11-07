@@ -3,6 +3,7 @@ import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { interpret, type Line } from "./interpret";
+import { isHeading } from "./match";
 
 type Input = Record<string, unknown>;
 type Locale = "en" | "es";
@@ -12,6 +13,7 @@ type Draft = {
   reviewLanguage: Locale;
   currency: "USD";
   lines: Line[];
+  headings?: string[];
   totalMinor: number;
   canApprove: boolean;
 };
@@ -65,12 +67,15 @@ export class Orders {
     if (input.reviewLanguage !== "en" && input.reviewLanguage !== "es")
       throw new OrderError(400, "invalid_language");
     // Decimal commas are ambiguous in bilingual notes. Keep those lines intact for review.
-    const lines = text
-      .split(/\r?\n|;|,(?!\d)/)
+    const sources = text
+      .split(/\r?\n|[;；，、]|,(?!\d)/)
       .map((s) => s.trim())
-      .filter(Boolean)
+      .filter(Boolean);
+    const headings = sources.filter(isHeading);
+    const lines = sources
+      .filter((source) => !isHeading(source))
       .map((source) => interpret(randomUUID(), source));
-    if (!lines.length || lines.length > 50)
+    if (!lines.length || sources.length > 50)
       throw new OrderError(400, "invalid_line_count");
     const draft = summarize({
       id: randomUUID(),
@@ -78,6 +83,7 @@ export class Orders {
       reviewLanguage: input.reviewLanguage,
       currency: "USD",
       lines,
+      headings,
       totalMinor: 0,
       canApprove: false,
     });

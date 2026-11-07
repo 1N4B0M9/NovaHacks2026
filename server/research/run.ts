@@ -1,4 +1,5 @@
 import { OrderError } from "../orders";
+import { isHeading } from "../match";
 import {
   ingredient,
   fold,
@@ -64,10 +65,10 @@ export async function research(
   )
     throw new OrderError(400, "invalid_location");
   const lines = input.text
-    .split(/\r?\n|;|,(?!\d)/)
+    .split(/\r?\n|[;；，、]|,(?!\d)/)
     .map((x) => x.trim())
     .filter(Boolean);
-  if (!lines.length || lines.length > 6)
+  if (!lines.length || lines.length > 16)
     throw new OrderError(400, "invalid_line_count");
   const language: Language = input.reviewLanguage,
     t = copy[language];
@@ -123,6 +124,14 @@ export async function research(
       bestComparableUrl: null,
       lowestProvisionalUrl: null,
     };
+    if (isHeading(source))
+      return {
+        ...base,
+        ...blank,
+        status: "heading",
+        message: language === "es" ? "Título de la receta." : "Recipe heading.",
+        stores: [],
+      };
     if (!item)
       return {
         ...base,
@@ -218,8 +227,13 @@ export async function research(
     status,
     reviewLanguage: language,
     deliveryLocation: input.deliveryLocation ?? null,
-    locationHint: typeof input.deliveryLocation === "string" && input.deliveryLocation.trim() ? null :
-      language === "es" ? "Indica el destino y confirma el envío con el proveedor." : "Provide the destination and confirm delivery with the supplier.",
+    locationHint:
+      typeof input.deliveryLocation === "string" &&
+      input.deliveryLocation.trim()
+        ? null
+        : language === "es"
+          ? "Indica el destino y confirma el envío con el proveedor."
+          : "Provide the destination and confirm delivery with the supplier.",
     coverage: t.coverage,
     items,
   };
