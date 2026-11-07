@@ -46,3 +46,6 @@ Explicit fractional `each` demand is accepted (for example 0.5 each onion). Actu
 
 ## Chinese demo (#28)
 Drafts and research accept reviewLanguage `zh` for Simplified Chinese UI and explanations. `/api/transcribe` accepts optional `engine` (`openrouter`, the default, or `local-zh`, a server-local Simplified Chinese OCR worker). Both return editable `{text}`. Local failure or a busy worker returns 503; no silent handoff to an external service. Supplier titles, prices and IDs remain unchanged.
+
+## Two-pass verification (#30)
+POST /api/transcribe accepts engine hybrid and a sourceLanguage of en, es, zh/zh-Hans or zh-Hant. The UI selects hybrid by default; API clients that omit engine retain the previous online behavior. Response includes editable text, readers {local,online} booleans, and ordered rows {local,online,box,reason}. Pixel boxes refer to the transmitted image. Review reasons are different, missing, unclear or low; null indicates agreement. For crop retries set lineOnly to true and send the cropped image. With one unavailable reader, review every remaining line. With neither, return 503. No order endpoint accepts or approves OCR output automatically.

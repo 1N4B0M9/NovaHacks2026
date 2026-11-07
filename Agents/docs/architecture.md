@@ -53,3 +53,6 @@ Client research cards show possible products, observed per-pack price/size, comp
 
 ## Local Chinese recognition
 The intake can use an offline Tesseract.js reader with bundled chi_sim data. A bounded Node child process decodes one block of text and terminates; no model API key is required. Both engines share the existing editable transcript and deterministic order path. See [demo and verification](updates/issue-28.md).
+
+## Two-pass read and review
+Local Tesseract returns transcript, line boxes and confidence before the configured OpenRouter model checks the same photo with the transcript as evidence. A bounded line alignment preserves additions and omissions. Client-side cropping keeps the full original for review and sends only the selection when crop-before-read is enabled. Uncertain rows require explicit correction or omission; an optional single-line reread shows both results. See [issue #30](updates/issue-30.md).
